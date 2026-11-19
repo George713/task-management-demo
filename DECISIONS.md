@@ -126,6 +126,47 @@ Priority is stored as text (`'URGENT'`), not as a number, so reordering the list
 
 ---
 
+## Implementation: ticket 01, create and list (2026-11-19)
+
+### D19. Quarkus 3.40 LTS, JAR packaging set explicitly
+**Decision:** Generated from code.quarkus.io on the recommended stream, Quarkus 3.40.1.2 (an LTS release), with group `com.example`, artifact `task-management`, Java package `com.example.tasks`. code.quarkus.io now generates `<packaging>quarkus</packaging>`; we changed it to `<packaging>jar</packaging>` and bound the Quarkus plugin goals (`build`, `generate-code`, `generate-code-tests`) explicitly.
+**Why:** The brief requires JAR packaging, and `jar` says so literally in the POM. The build output is unchanged (`target/quarkus-app/quarkus-run.jar`). The generated `src/main/docker/` files and `.dockerignore` were kept untouched for now; ticket 04 owns the Docker setup.
+
+### D20. Postgres generates the id; the entity has no public fields
+**Decision:** `Task` extends Panache's `PanacheEntityBase` and declares its own `id` as an `IDENTITY` column (`BIGINT GENERATED ALWAYS AS IDENTITY`). All fields are private, with getters only.
+**Alternatives:** `PanacheEntity`, which brings a public `id` backed by a Hibernate sequence (`task_seq`, allocation size 50) and encourages public fields.
+**Why:** Public fields would let any code assign `priority` or `created`, which breaks D4/D5. An identity column means the database generates the id (D12) without an extra sequence in the migration.
+
+### D21. Request bodies refuse unknown fields globally
+**Decision:** `quarkus.jackson.fail-on-unknown-properties=true`, so any field a request object doesn't declare is a 400.
+**Alternatives:** Per-class `@JsonIgnoreProperties(ignoreUnknown = false)`. This doesn't work: `false` is the annotation's default, so Jackson falls back to the global setting, which Quarkus sets to "ignore".
+**Why:** It implements D12 ("rejected, not ignored") in one place. The server only deserializes request objects, so nothing else is affected.
+
+### D22. One error shape: `{"message": "..."}`
+**Decision:** Every 400 carries a JSON body with one readable `message`. Our own exception mappers replace Quarkus's defaults for validation errors, unknown or mistyped fields, unknown Priority values ("Invalid priority 'HIGH'. Allowed values: LOW, NORMAL, URGENT") and malformed JSON. Without them, Quarkus returns parser internals (line and column numbers) or an empty body.
+**Why:** The page shows `message` inline as-is (D16), and any API client gets the same predictable shape.
+
+### D23. The name is trimmed before it is validated
+**Decision:** The request object trims the name (`String.strip()`, Unicode whitespace) before `@NotBlank`/`@Size(max = 255)` run. The entity factory trims again.
+**Why:** The 255-character limit applies to the stored name. A 255-character name with surrounding spaces should be accepted. The second trim in the entity keeps the rule true for any future caller (D11).
+
+### D24. Created is stored at microsecond precision
+**Decision:** `Task.create` truncates `Instant.now()` to microseconds.
+**Why:** Postgres `TIMESTAMPTZ` keeps microseconds, but Java's clock is finer. Without truncation, the Task returned by `POST` had a different `created` than the same Task returned by `GET` (the database rounds it). A test pins this down.
+
+### D25. Exact ties in the list order fall back to newest id
+**Decision:** The list query sorts by `done`, an explicit `CASE` on Priority (URGENT, NORMAL, LOW), `created desc`, and finally `id desc`.
+**Why:** It makes the order fully deterministic even if two Tasks share the same microsecond.
+
+### D26. The Done part of the list order is tested in ticket 02
+**Decision:** Ticket 01 tests the order by Priority and by Created. The query already puts open Tasks before Done ones, but its test comes with ticket 02.
+**Why:** Tests only use the HTTP API (D15), and a Done Task can't be made through the API until `PATCH` exists. Writing it into the database directly would bypass the seam. Ticket 02 already lists "a Done Task moves below open Tasks" as a test.
+
+### D27. Frontend files and pinned stylesheet
+**Decision:** The page lives in `src/main/resources/META-INF/resources/`: `index.html`, `app.js` (UI), `task-store.js` (interface and factory), `api-task-store.js`, and the one-line `config.js` (`export const TASK_STORE = 'api';`). Pico.css 2.1.1 (classless build) is loaded from jsDelivr. Priority badges are `<mark>` elements coloured by a few lines of inline CSS. Until tickets 02 and 03, `update`/`remove` reject with "not available yet".
+
+---
+
 ## How this was built
 
 1. **Grilling session.** Every open question was worked through as a decision tree. The answers are recorded in this file, in the ADRs and in the glossary.

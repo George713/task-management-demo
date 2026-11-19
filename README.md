@@ -20,6 +20,19 @@ The reasoning for all of this is in [`DECISIONS.md`](DECISIONS.md) (see below).
 
 ## Run it
 
+### Prerequisites
+
+The browser demo needs nothing installed. To run the real app you need:
+
+| What | Needed for | Notes |
+| --- | --- | --- |
+| **Git** | every route | to clone this repository |
+| **Docker** with Compose v2, running | every route | Docker Desktop on Windows and macOS, or Docker Engine plus the Compose plugin on Linux. Compose runs Postgres (and the app), and dev mode and the tests start Postgres through Dev Services. |
+| **JDK 17** | plain Java, dev mode, tests | a JDK, not just a JRE, with `java` on your `PATH` or `JAVA_HOME` set. Not needed for the Docker Compose route. |
+| Free ports **8080** and **5432** | running the app | 8080 for the app, 5432 for the Compose Postgres |
+
+You don't need Maven: the included Maven wrapper (`./mvnw`, or `mvnw.cmd` on Windows) downloads the right version.
+
 ### With Docker Compose (needs only Docker)
 
 ```sh
@@ -43,10 +56,7 @@ java -jar target/quarkus-app/quarkus-run.jar
 
 Open <http://localhost:8080>. By default the JAR connects to the Compose Postgres on `localhost:5432` (database, user and password are all `tasks`). To use another database, set `QUARKUS_DATASOURCE_JDBC_URL`, `QUARKUS_DATASOURCE_USERNAME` and `QUARKUS_DATASOURCE_PASSWORD`. `./mvnw package` also runs the tests, so Docker must be running (see [Tests](#tests)). Stop Postgres afterwards with `docker compose down`.
 
-Notes:
-
-- Port 5432 (Postgres) and 8080 (app) must be free.
-- On Windows, run `./mvnw` from Git Bash, or use `mvnw.cmd` in PowerShell or cmd. The Maven wrapper downloads the right Maven version, so you don't need Maven installed.
+On Windows, run `./mvnw` from Git Bash, or use `mvnw.cmd` in PowerShell or cmd.
 
 ## Develop
 

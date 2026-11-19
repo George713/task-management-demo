@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tasks</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.1.1/css/pico.classless.min.css">
+  <style>
+    #task-list { list-style: none; padding: 0; }
+    #task-list li { display: flex; align-items: center; gap: 0.75rem; list-style: none; }
+    #task-list .name { flex: 1; overflow-wrap: anywhere; }
+    #task-list li.done .name { text-decoration: line-through; opacity: 0.6; }
+    mark { font-size: 0.75rem; font-weight: 600; border-radius: 0.25rem; }
+    mark[data-priority="URGENT"] { background: #d93526; color: #fff; }
+    mark[data-priority="NORMAL"] { background: #0172ad; color: #fff; }
+    mark[data-priority="LOW"] { background: #8891a4; color: #fff; }
+    .error { color: #d93526; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Tasks</h1>
+
+    <form id="create-form">
+      <fieldset role="group">
+        <input id="name" name="name" aria-label="Task name" placeholder="What needs to be done?" autocomplete="off">
+        <select id="priority" name="priority" aria-label="Priority">
+          <option value="LOW">LOW</option>
+          <option value="NORMAL" selected>NORMAL</option>
+          <option value="URGENT">URGENT</option>
+        </select>
+        <button type="submit">Add</button>
+      </fieldset>
+      <p id="form-error" class="error" role="alert" hidden></p>
+    </form>
+
+    <p id="list-error" class="error" role="alert" hidden></p>
+    <ul id="task-list"></ul>
+    <p id="empty" hidden>No Tasks yet.</p>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

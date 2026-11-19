@@ -82,11 +82,49 @@ class ChangeTaskTest {
     }
 
     @Test
+    void renameToBlankIsRejected() {
+        rejected("{\"name\": \"   \"}", "blank");
+    }
+
+    @Test
+    void renameOverLimitAfterTrimmingIsRejected() {
+        rejected("{\"name\": \"" + "a".repeat(256) + "\"}", "255");
+    }
+
+    @Test
+    void malformedJsonIsRejected() {
+        rejected("{\"done\": true", "malformed");
+    }
+
+    @Test
+    void changingPriorityIsRejected() {
+        rejected("{\"priority\": \"LOW\"}", "priority");
+    }
+
+    @Test
+    void changingCreatedIsRejected() {
+        rejected("{\"created\": \"2020-01-01T00:00:00Z\"}", "created");
+    }
+
+    @Test
     void changingAnUnknownTaskIsNotFound() {
         patch(Long.MAX_VALUE, "{\"done\": true}")
                 .statusCode(404)
                 .contentType(ContentType.JSON)
                 .body("message", containsStringIgnoringCase("not found"));
+    }
+
+    /** Sends the body to a fresh URGENT Task, expects a 400 mentioning the text, and checks the Task is unchanged. */
+    private static void rejected(String body, String messageMentions) {
+        JsonPath task = create("Keep me", "URGENT");
+        long id = task.getLong("id");
+
+        patch(id, body)
+                .statusCode(400)
+                .contentType(ContentType.JSON)
+                .body("message", containsStringIgnoringCase(messageMentions));
+
+        assertEquals(task.getMap("$"), listed(id));
     }
 
     /** The Task with this id as GET /api/tasks returns it. */

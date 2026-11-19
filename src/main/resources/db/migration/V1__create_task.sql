@@ -1,0 +1,7 @@
+CREATE TABLE task (
+    id       BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name     VARCHAR(255) NOT NULL,
+    done     BOOLEAN      NOT NULL DEFAULT FALSE,
+    created  TIMESTAMPTZ  NOT NULL,
+    priority VARCHAR(10)  NOT NULL CHECK (priority IN ('LOW', 'NORMAL', 'URGENT'))
+);

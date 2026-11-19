@@ -1,0 +1,42 @@
+# Publishes the browser-only demo (D3, D8-D10, ADR-0003) to GitHub Pages.
+# It deploys the same static page the Quarkus app serves, with config.js switched to the
+# localStorage task store. Nothing is built: the page is plain HTML and ES modules.
+#
+# One-time repository setting: Settings > Pages > Build and deployment > Source: "GitHub Actions".
+name: Deploy demo to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; a newer push replaces a queued one but never cancels a running one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy the static frontend and switch it to the local task store
+        run: |
+          mkdir _site
+          cp -r src/main/resources/META-INF/resources/. _site/
+          echo "export const TASK_STORE = 'local';" > _site/config.js
+          test -f _site/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

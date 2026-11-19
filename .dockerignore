@@ -1,0 +1,19 @@
+# Keep the build context small: the image builds from source (see Dockerfile),
+# so build output, VCS data and editor/agent files are not needed.
+target/
+.git
+.gitattributes
+.gitignore
+.idea
+.vscode
+*.iml
+.claude/
+.scratch/
+docs/
+assets/
+*.md
+Dockerfile
+.dockerignore
+docker-compose.yml
+compose.yaml
+.env

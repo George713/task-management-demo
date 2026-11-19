@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.time.Instant;
 
-import static io.restassured.RestAssured.given;
+import static com.example.tasks.TaskApi.post;
 import static org.hamcrest.Matchers.containsStringIgnoringCase;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
@@ -20,12 +20,7 @@ class CreateTaskTest {
     void createWithNameOnlyTrimsNameAndAppliesDefaults() {
         Instant before = Instant.now();
 
-        String created = given()
-                .contentType(ContentType.JSON)
-                .body("{\"name\": \"  Buy milk  \"}")
-        .when()
-                .post("/api/tasks")
-        .then()
+        String created = post("{\"name\": \"  Buy milk  \"}")
                 .statusCode(201)
                 .contentType(ContentType.JSON)
                 .body("id", notNullValue())
@@ -42,12 +37,7 @@ class CreateTaskTest {
 
     @Test
     void createWithExplicitPriority() {
-        given()
-                .contentType(ContentType.JSON)
-                .body("{\"name\": \"Fix the roof\", \"priority\": \"URGENT\"}")
-        .when()
-                .post("/api/tasks")
-        .then()
+        post("{\"name\": \"Fix the roof\", \"priority\": \"URGENT\"}")
                 .statusCode(201)
                 .body("name", equalTo("Fix the roof"))
                 .body("priority", equalTo("URGENT"))
@@ -67,12 +57,7 @@ class CreateTaskTest {
     @Test
     void nameAtLimitAfterTrimmingIsAccepted() {
         String name = "b".repeat(255);
-        given()
-                .contentType(ContentType.JSON)
-                .body("{\"name\": \"  " + name + "  \"}")
-        .when()
-                .post("/api/tasks")
-        .then()
+        post("{\"name\": \"  " + name + "  \"}")
                 .statusCode(201)
                 .body("name", equalTo(name));
     }
@@ -104,12 +89,7 @@ class CreateTaskTest {
 
     /** Posts the body and expects a 400 whose readable message mentions the given text. */
     private static void rejected(String body, String messageMentions) {
-        given()
-                .contentType(ContentType.JSON)
-                .body(body)
-        .when()
-                .post("/api/tasks")
-        .then()
+        post(body)
                 .statusCode(400)
                 .contentType(ContentType.JSON)
                 .body("message", containsStringIgnoringCase(messageMentions));

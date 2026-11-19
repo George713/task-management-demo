@@ -5,9 +5,11 @@ import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Map;
 
+import static com.example.tasks.TaskApi.create;
+import static com.example.tasks.TaskApi.listed;
+import static com.example.tasks.TaskApi.patch;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsStringIgnoringCase;
 import static org.hamcrest.Matchers.equalTo;
@@ -125,38 +127,5 @@ class ChangeTaskTest {
                 .body("message", containsStringIgnoringCase(messageMentions));
 
         assertEquals(task.getMap("$"), listed(id));
-    }
-
-    /** The Task with this id as GET /api/tasks returns it. */
-    private static Map<String, Object> listed(long id) {
-        List<Map<String, Object>> tasks = given()
-        .when()
-                .get("/api/tasks")
-        .then()
-                .statusCode(200)
-                .extract().jsonPath().getList("$");
-        return tasks.stream()
-                .filter(task -> ((Number) task.get("id")).longValue() == id)
-                .findFirst().orElseThrow();
-    }
-
-    private static JsonPath create(String name, String priority) {
-        return given()
-                .contentType(ContentType.JSON)
-                .body("{\"name\": \"" + name + "\", \"priority\": \"" + priority + "\"}")
-        .when()
-                .post("/api/tasks")
-        .then()
-                .statusCode(201)
-                .extract().jsonPath();
-    }
-
-    private static io.restassured.response.ValidatableResponse patch(long id, String body) {
-        return given()
-                .contentType(ContentType.JSON)
-                .body(body)
-        .when()
-                .patch("/api/tasks/" + id)
-        .then();
     }
 }

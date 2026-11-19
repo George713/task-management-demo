@@ -4,16 +4,16 @@
 
 **Blocked by:** 01 (Create and list Tasks)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] A multi-stage Dockerfile: the build stage packages the JAR with the Maven wrapper, the runtime stage runs it on a slim Java 17 runtime. Building the image needs no local Java or Maven.
-- [ ] A Docker Compose file defines `db` (Postgres with a healthcheck) and `app` (starts only once `db` is healthy, configured through environment variables, exposed on port 8080).
-- [ ] `docker compose up --build` from a clean checkout brings up the app at `localhost:8080`, Flyway migrates the schema, and Tasks can be created and listed. Tasks survive restarting the containers (named volume for Postgres data).
-- [ ] Plain-Java route works: `docker compose up db`, then `./mvnw package`, then running the JAR with `java -jar`. The prod-profile default database settings point to the Compose Postgres on localhost.
-- [ ] Database connection settings apply only to the prod profile. `./mvnw quarkus:dev` and `./mvnw test` still get Postgres from Dev Services.
-- [ ] A `.dockerignore` keeps build output and VCS data out of the build context.
-- [ ] Both routes are verified by actually running them. Exact commands are noted in this ticket's Comments for the README (ticket 06).
-- [ ] Any new decision is appended to `DECISIONS.md`.
+- [x] A multi-stage Dockerfile: the build stage packages the JAR with the Maven wrapper, the runtime stage runs it on a slim Java 17 runtime. Building the image needs no local Java or Maven.
+- [x] A Docker Compose file defines `db` (Postgres with a healthcheck) and `app` (starts only once `db` is healthy, configured through environment variables, exposed on port 8080).
+- [x] `docker compose up --build` from a clean checkout brings up the app at `localhost:8080`, Flyway migrates the schema, and Tasks can be created and listed. Tasks survive restarting the containers (named volume for Postgres data).
+- [x] Plain-Java route works: `docker compose up db`, then `./mvnw package`, then running the JAR with `java -jar`. The prod-profile default database settings point to the Compose Postgres on localhost.
+- [x] Database connection settings apply only to the prod profile. `./mvnw quarkus:dev` and `./mvnw test` still get Postgres from Dev Services.
+- [x] A `.dockerignore` keeps build output and VCS data out of the build context.
+- [x] Both routes are verified by actually running them. Exact commands are noted in this ticket's Comments for the README (ticket 06).
+- [x] Any new decision is appended to `DECISIONS.md`.
 
 ## Comments
 
@@ -51,3 +51,5 @@ Dev mode and tests (Dev Services):
 Verified: both started their own Dev Services Postgres container even while the Compose db was running on port 5432 (tests confirmed on `postgres:16-alpine` after D35; dev mode was checked before that pin). Dev mode listed no Tasks (separate database). `./mvnw test`: 12 tests green before merging ticket 02, 23 tests green after. After the merge, `docker compose up --build` was re-run: POST 201, PATCH `{"done":true}` 200, list order correct.
 
 Notes for the README (ticket 06): on Windows, `./mvnw` needs Git Bash, or use `mvnw.cmd`. Port 5432 must be free for the Compose db.
+
+**Resolved 2026-11-19** (merged into `feature/task-management`): branch `ticket/04-run-docker-java` (b3c880f). Both routes run for real; commands above. Decisions D32-D35.

@@ -1,6 +1,6 @@
 # Spec: Task Management Application
 
-Status: ready-for-agent
+Status: resolved
 
 Vocabulary follows `GLOSSARY.md` (Task, Priority, Done, Created). Decisions referenced as D1–D18 live in `DECISIONS.md`; architectural decisions in `docs/adr/0001`–`0003`.
 

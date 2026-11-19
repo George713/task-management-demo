@@ -4,14 +4,14 @@
 
 **Blocked by:** 04 (Run with Docker Compose and with plain Java), 05 (Browser-only demo mode and GitHub Pages)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] The README replaces the placeholder. It covers: a one-paragraph summary of the app and the brief, the GitHub Pages demo link (with the note that the demo stores data in the browser only), `docker compose up --build`, the plain-Java route, dev mode, running the tests (Docker required), the tech stack, and links to `DECISIONS.md`, `docs/adr/` and `GLOSSARY.md`.
-- [ ] The README notes the deliberate interpretations of the brief: Priority is fixed after creation, and fields that aren't allowed in a request are rejected.
-- [ ] Every command in the README has been run as written, from a clean checkout.
-- [ ] `DECISIONS.md` is checked against the code: any decision that changed during implementation is updated or superseded, and the "How this was built" section reflects the actual process.
-- [ ] `GLOSSARY.md` and the ADRs still match the code; any contradiction is surfaced rather than silently fixed.
-- [ ] Any new decision is appended to `DECISIONS.md`.
+- [x] The README replaces the placeholder. It covers: a one-paragraph summary of the app and the brief, the GitHub Pages demo link (with the note that the demo stores data in the browser only), `docker compose up --build`, the plain-Java route, dev mode, running the tests (Docker required), the tech stack, and links to `DECISIONS.md`, `docs/adr/` and `GLOSSARY.md`.
+- [x] The README notes the deliberate interpretations of the brief: Priority is fixed after creation, and fields that aren't allowed in a request are rejected.
+- [x] Every command in the README has been run as written, from a clean checkout.
+- [x] `DECISIONS.md` is checked against the code: any decision that changed during implementation is updated or superseded, and the "How this was built" section reflects the actual process.
+- [x] `GLOSSARY.md` and the ADRs still match the code; any contradiction is surfaced rather than silently fixed.
+- [x] Any new decision is appended to `DECISIONS.md`.
 
 ## Comments
 
@@ -35,3 +35,5 @@ Not runnable before pushing: the GitHub Pages demo link and workflow (D41).
 - `spec.md` says the Task entity "extends Panache's base entity (generated numeric id …)". The code extends `PanacheEntityBase` and declares its own identity id; D20 records why. The spec wasn't changed.
 - In `DECISIONS.md`, D11 (transactions), D14 (`up db` vs `up -d db`), D15 ("a handful" of tests) and D17 (the slice list) differed slightly from the code. They now carry correction notes (D45).
 - The ADRs (0001 to 0003) match the code.
+
+**Resolved 2026-11-19** (merged into `feature/task-management`): branch `ticket/06-readme-docs` (b991878). Every README command run from a fresh clone except the Pages link (not deployed yet). Code review fixes followed on `fix/code-review` (064794c, 34 tests, D46-D50). Open owner decisions: GLOSSARY "identified by its name" wording and the spec Panache base-entity line.

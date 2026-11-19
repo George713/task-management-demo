@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.containsStringIgnoringCase;
 import static org.hamcrest.Matchers.emptyString;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -24,6 +25,24 @@ class DeleteTaskTest {
                 .body(emptyString());
 
         assertFalse(listedIds().contains(id));
+    }
+
+    @Test
+    void deletingAnUnknownTaskIsNotFound() {
+        delete(Long.MAX_VALUE)
+                .statusCode(404)
+                .contentType(ContentType.JSON)
+                .body("message", containsStringIgnoringCase("not found"));
+    }
+
+    @Test
+    void deletingTheSameTaskTwiceIsNotFoundTheSecondTime() {
+        long id = create("Cancel gym membership");
+
+        delete(id).statusCode(204);
+        delete(id)
+                .statusCode(404)
+                .body("message", containsStringIgnoringCase("not found"));
     }
 
     private static List<Long> listedIds() {

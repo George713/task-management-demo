@@ -99,7 +99,9 @@ public class TaskResource {
     @Path("{id}")
     @Transactional
     public void delete(@PathParam("id") long id) {
-        Task.deleteById(id);
+        if (!Task.deleteById(id)) {
+            throw notFound(id);
+        }
     }
 
     /** A 404 with the same {@code {"message": "..."}} body as every 400 (D22). */

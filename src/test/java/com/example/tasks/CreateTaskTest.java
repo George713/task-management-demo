@@ -59,6 +59,24 @@ class CreateTaskTest {
         rejected("{\"name\": \"   \"}", "name");
     }
 
+    @Test
+    void nameOverLimitAfterTrimmingIsRejected() {
+        rejected("{\"name\": \"" + "a".repeat(256) + "\"}", "255");
+    }
+
+    @Test
+    void nameAtLimitAfterTrimmingIsAccepted() {
+        String name = "b".repeat(255);
+        given()
+                .contentType(ContentType.JSON)
+                .body("{\"name\": \"  " + name + "  \"}")
+        .when()
+                .post("/api/tasks")
+        .then()
+                .statusCode(201)
+                .body("name", equalTo(name));
+    }
+
     /** Posts the body and expects a 400 whose readable message mentions the given text. */
     private static void rejected(String body, String messageMentions) {
         given()

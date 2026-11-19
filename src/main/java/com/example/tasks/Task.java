@@ -18,6 +18,7 @@ import java.util.List;
  *
  * <p>New Tasks are made only through {@link #create(String, Priority)}. Priority and
  * Created can never change after creation (D4, D5), so there are no setters for them.
+ * A Task changes only through {@link #rename(String)} and {@link #markDone(boolean)}.
  */
 @Entity
 public class Task extends PanacheEntityBase {
@@ -53,6 +54,11 @@ public class Task extends PanacheEntityBase {
         task.created = Instant.now().truncatedTo(ChronoUnit.MICROS);
         task.done = false;
         return task;
+    }
+
+    /** Gives the Task a new name, trimmed like at creation. */
+    public void rename(String name) {
+        this.name = name.strip();
     }
 
     /**

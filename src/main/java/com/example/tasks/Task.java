@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /**
@@ -48,7 +49,8 @@ public class Task extends PanacheEntityBase {
         Task task = new Task();
         task.name = name.strip();
         task.priority = priority == null ? Priority.NORMAL : priority;
-        task.created = Instant.now();
+        // Postgres stores microseconds; truncating here keeps the returned Task identical to the stored one.
+        task.created = Instant.now().truncatedTo(ChronoUnit.MICROS);
         task.done = false;
         return task;
     }

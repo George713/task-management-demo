@@ -2,9 +2,7 @@ package com.example.tasks;
 
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -32,9 +30,7 @@ public class TaskResource {
      * quarkus.jackson.fail-on-unknown-properties). The name is trimmed before it is validated.
      */
     public record CreateTaskRequest(
-            @NotBlank(message = "Name must not be blank")
-            @Size(max = 255, message = "Name must be at most 255 characters")
-            String name,
+            @NotNull(message = "Name must not be blank") @TaskName String name,
             Priority priority) {
 
         public CreateTaskRequest {
@@ -48,9 +44,7 @@ public class TaskResource {
      * any other unknown field. A name that is sent is trimmed, then must not be blank.
      */
     public record ChangeTaskRequest(
-            @Size(min = 1, message = "Name must not be blank")
-            @Size(max = 255, message = "Name must be at most 255 characters")
-            String name,
+            @TaskName String name,
             Boolean done) {
 
         public ChangeTaskRequest {
@@ -106,9 +100,7 @@ public class TaskResource {
 
     /** A 404 with the same {@code {"message": "..."}} body as every 400 (D22). */
     private static NotFoundException notFound(long id) {
-        return new NotFoundException(Response.status(Response.Status.NOT_FOUND)
-                .type(MediaType.APPLICATION_JSON)
-                .entity(new ErrorMappers.ErrorResponse("Task " + id + " was not found. It may have been deleted."))
-                .build());
+        return new NotFoundException(ErrorMappers.error(Response.Status.NOT_FOUND,
+                "Task " + id + " was not found. It may have been deleted."));
     }
 }

@@ -16,18 +16,23 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/** Turns rejected requests into a 400 with one readable message: {@code {"message": "..."}}. */
+/** Turns rejected requests into an error with one readable message: {@code {"message": "..."}}. */
 public class ErrorMappers {
 
     /** The JSON shape of every error response. */
     public record ErrorResponse(String message) {
     }
 
-    static Response badRequest(String message) {
-        return Response.status(Response.Status.BAD_REQUEST)
+    /** A response with this status and the {@code {"message": "..."}} body every error uses (D22). */
+    static Response error(Response.Status status, String message) {
+        return Response.status(status)
                 .type(MediaType.APPLICATION_JSON)
                 .entity(new ErrorResponse(message))
                 .build();
+    }
+
+    static Response badRequest(String message) {
+        return error(Response.Status.BAD_REQUEST, message);
     }
 
     @ServerExceptionMapper
@@ -43,12 +48,11 @@ public class ErrorMappers {
      * Replaces Quarkus' built-in Jackson error bodies (which expose parser internals) for the
      * request body problems a client can cause: malformed JSON, a value of the wrong type or an
      * unknown enum constant, and fields that are not allowed (request objects refuse unknown fields).
+     * Quarkus ships its own mapper for MismatchedInputException (the parent of the wrong-type,
+     * unknown-enum and unknown-field exceptions), which is closer to those exceptions than
+     * JsonProcessingException, so it is named here to take precedence (D48).
      */
-    @ServerExceptionMapper({
-            JsonProcessingException.class,
-            MismatchedInputException.class,
-            InvalidFormatException.class,
-            UnrecognizedPropertyException.class})
+    @ServerExceptionMapper({JsonProcessingException.class, MismatchedInputException.class})
     public Response unreadableBody(JsonProcessingException e) {
         if (e instanceof UnrecognizedPropertyException unknown) {
             String allowed = unknown.getKnownPropertyIds().stream()

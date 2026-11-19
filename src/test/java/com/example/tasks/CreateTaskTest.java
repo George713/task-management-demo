@@ -50,6 +50,13 @@ class CreateTaskTest {
     }
 
     @Test
+    void missingOrBlankNameGetsExactlyOneMessage() {
+        post("{}").statusCode(400).body("message", equalTo("Name must not be blank"));
+        post("{\"name\": null}").statusCode(400).body("message", equalTo("Name must not be blank"));
+        post("{\"name\": \"  \"}").statusCode(400).body("message", equalTo("Name must not be blank"));
+    }
+
+    @Test
     void nameOfOnlyNonBreakingAndOtherUnicodeSpacesIsRejected() {
         // No-break space, ideographic space, byte order mark: the demo's JavaScript trim() removes them too.
         rejected("{\"name\": \"\u00a0\u3000\ufeff\"}", "blank");

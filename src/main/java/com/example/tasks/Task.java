@@ -23,11 +23,14 @@ import java.util.List;
 @Entity
 public class Task extends PanacheEntityBase {
 
+    /** The longest name a Task can have, after trimming. Matches the VARCHAR(255) column. */
+    public static final int MAX_NAME_LENGTH = 255;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false, length = MAX_NAME_LENGTH)
     private String name;
 
     @Column(nullable = false)

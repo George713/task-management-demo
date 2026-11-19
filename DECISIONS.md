@@ -182,16 +182,6 @@ Priority is stored as text (`'URGENT'`), not as a number, so reordering the list
 **Decision:** Clicking a name (or pressing Enter on it) swaps it for an input. Enter saves; Escape or clicking elsewhere cancels without saving. If saving fails, the input stays open with the message below it. A failed Done toggle reloads the list, so the checkbox shows the real state again, and shows the message above the list.
 **Why:** The spec defines only Enter and Escape. Cancelling on blur means a change is saved only on an explicit Enter.
 
-### D32. Deleting a Task that is already gone is a 404, not a silent 204
-**Decision:** `DELETE /api/tasks/{id}` returns 204 only if a Task was actually removed. Deleting an unknown id, including one that was just deleted, returns 404 with the same `{"message": "..."}` body as a PATCH on an unknown id (D29).
-**Alternatives:** An idempotent DELETE that answers 204 whether or not the Task existed.
-**Why:** The spec asks for 404 on an unknown id (D12, user story 30), and the page can then tell the user that the Task was already deleted elsewhere (user story 23). A test pins down that a second delete of the same Task gets 404.
-
-### D33. The delete button deletes at once, without a confirmation dialog
-**Decision:** Each row has a "Delete" button. Clicking it deletes the Task straight away and reloads the list. If the delete fails (for example a 404 because another tab already deleted it), the list is reloaded and the message is shown above it, the same as a failed Done toggle (D31).
-**Alternatives:** A browser `confirm()` or an undo option.
-**Why:** The spec asks for a delete button and nothing more, and undo is out of scope. A confirmation step would be UI behaviour nobody asked for.
-
 ---
 
 ## Implementation: ticket 04, Docker Compose and plain Java (2026-11-19)
@@ -212,6 +202,20 @@ Priority is stored as text (`'URGENT'`), not as a number, so reordering the list
 ### D35. Dev Services use the same Postgres image as Compose
 **Decision:** `quarkus.datasource.devservices.image-name=postgres:16-alpine`.
 **Why:** Quarkus 3.40 Dev Services default to `postgres:18`. D15 says the tests use the same database as production, so the version has to match too.
+
+---
+
+## Implementation: ticket 03, delete a Task (2026-11-19)
+
+### D36. Deleting a Task that is already gone is a 404, not a silent 204
+**Decision:** `DELETE /api/tasks/{id}` returns 204 only if a Task was actually removed. Deleting an unknown id, including one that was just deleted, returns 404 with the same `{"message": "..."}` body as a PATCH on an unknown id (D29).
+**Alternatives:** An idempotent DELETE that answers 204 whether or not the Task existed.
+**Why:** The spec asks for 404 on an unknown id (D12, user story 30), and the page can then tell the user that the Task was already deleted elsewhere (user story 23). A test pins down that a second delete of the same Task gets 404.
+
+### D37. The delete button deletes at once, without a confirmation dialog
+**Decision:** Each row has a "Delete" button. Clicking it deletes the Task straight away and reloads the list. If the delete fails (for example a 404 because another tab already deleted it), the list is reloaded and the message is shown above it, the same as a failed Done toggle (D31).
+**Alternatives:** A browser `confirm()` or an undo option.
+**Why:** The spec asks for a delete button and nothing more, and undo is out of scope. A confirmation step would be UI behaviour nobody asked for.
 
 ---
 

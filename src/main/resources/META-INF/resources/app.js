@@ -10,6 +10,23 @@ const formError = document.querySelector('#form-error');
 const listError = document.querySelector('#list-error');
 const list = document.querySelector('#task-list');
 const empty = document.querySelector('#empty');
+const demoBanner = document.querySelector('#demo-banner');
+const resetButton = document.querySelector('#reset');
+
+// Only the browser-only demo store can be reset (task-store.js), so only it gets the banner.
+if (typeof store.reset === 'function') {
+  demoBanner.hidden = false;
+  resetButton.addEventListener('click', async () => {
+    showError(formError, null);
+    try {
+      await store.reset();
+    } catch (error) {
+      await refresh(error.message);
+      return;
+    }
+    await refresh();
+  });
+}
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();

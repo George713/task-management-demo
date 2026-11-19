@@ -19,10 +19,18 @@
     mark[data-priority="NORMAL"] { background: #0172ad; color: #fff; }
     mark[data-priority="LOW"] { background: #8891a4; color: #fff; }
     .error { color: #d93526; }
+    #demo-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; }
+    #demo-banner p { margin: 0; }
+    #demo-banner button { margin: 0; width: auto; }
   </style>
 </head>
 <body>
   <main>
+    <article id="demo-banner" hidden>
+      <p><strong>Demo mode:</strong> tasks are stored in your browser only, not in Postgres.</p>
+      <button type="button" id="reset">Reset demo</button>
+    </article>
+
     <h1>Tasks</h1>
 
     <form id="create-form">

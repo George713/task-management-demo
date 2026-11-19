@@ -23,7 +23,7 @@ The task PDF prescribes these, so they are constraints, not choices:
 ### D1. Framework: Quarkus 3
 **Decision:** Quarkus 3 on Java 17 with Maven, generated from code.quarkus.io.
 **Alternatives:** Spring Boot 3, which has more tutorials and more examples in AI training data.
-**Why:** Quarkus dev mode starts a Postgres container on its own ("Dev Services"), so local setup needs zero configuration. It also starts quickly and builds small container images. And it fits the reviewer's ecosystem: Sebastian Daschner is well known in the Quarkus / Jakarta EE community.
+**Why:** Quarkus dev mode starts a Postgres container on its own ("Dev Services"), so local setup needs zero configuration. It also starts quickly and builds small container images. And it fits the reviewers' ecosystem, which is close to the Quarkus / Jakarta EE community.
 → [ADR-0001](docs/adr/0001-quarkus-over-spring-boot.md)
 
 ### D2. Frontend: JSON REST API + one plain HTML/JS page
@@ -72,7 +72,7 @@ Flyway keeps every schema change as a reviewed, versioned SQL file. It records w
 
 ### D10. Public GitHub repo with a GitHub Pages demo
 **Decision:** The repo is public and the browser demo is hosted on GitHub Pages. The submission is the repo link.
-**Alternatives:** A private repo with an invite to `@sdaschner`. On a free account Pages only works for public repos, so this would need GitHub Pro or no hosted demo.
+**Alternatives:** A private repo with an invite to the reviewer. On a free account Pages only works for public repos, so this would need GitHub Pro or no hosted demo.
 
 ### D11. Backend structure: two classes, with the rules inside the entity
 **Decision:**
@@ -239,7 +239,7 @@ Priority is stored as text (`'URGENT'`), not as a number, so reordering the list
 **Why:** The UI keeps talking only to the store (D8). Switching `config.js` is the one change between the modes, and the demo controls can't appear for a store that can't reset.
 
 ### D41. The Pages workflow copies the static folder and overwrites `config.js`
-**Decision:** `.github/workflows/pages.yml` runs on every push to `master` (and by hand through `workflow_dispatch`). It copies `src/main/resources/META-INF/resources/` into `_site/`, overwrites `_site/config.js` with `export const TASK_STORE = 'local';`, and deploys with the official `actions/upload-pages-artifact@v3` and `actions/deploy-pages@v4`. Nothing is built. Before the first run, the repository needs one setting: Settings → Pages → Source: "GitHub Actions" (to be covered in the README, ticket 06). The workflow was checked with `actionlint` and its copy step was run locally. It can't run for real until it is pushed.
+**Decision:** `.github/workflows/pages.yml` runs on every push to `master` (and by hand through `workflow_dispatch`). *Changed after the first deploys: pushes only trigger it when `src/main/resources/META-INF/resources/**` or the workflow file change, so docs-only commits no longer redeploy.* It copies `src/main/resources/META-INF/resources/` into `_site/`, overwrites `_site/config.js` with `export const TASK_STORE = 'local';`, and deploys with the official `actions/upload-pages-artifact@v3` and `actions/deploy-pages@v4`. Nothing is built. Before the first run, the repository needs one setting: Settings → Pages → Source: "GitHub Actions" (to be covered in the README, ticket 06). The workflow was checked with `actionlint` and its copy step was run locally. It can't run for real until it is pushed.
 **Alternatives:** A `gh-pages` branch built by a third-party action; editing `config.js` in place with `sed`.
 **Why:** The deployed page is exactly the one Quarkus serves, apart from that one line, so the demo always matches the latest UI (user story 53). All page URLs are relative (`app.js`, `api/tasks`), so it works under the `/<repo>/` path that Pages uses. Writing the whole one-line file is simpler and fails more visibly than a pattern replacement.
 

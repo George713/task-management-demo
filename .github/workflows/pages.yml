@@ -8,6 +8,10 @@ name: Deploy demo to GitHub Pages
 on:
   push:
     branches: [master]
+    # Only redeploy when the demo page itself (or this workflow) changes, not for docs or backend edits.
+    paths:
+      - 'src/main/resources/META-INF/resources/**'
+      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:

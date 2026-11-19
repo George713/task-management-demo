@@ -98,7 +98,7 @@ A Task looks like `{"id": 1, "name": "...", "done": false, "created": "2026-11-1
 
 The page only talks to Tasks through a small task-store interface. `config.js` picks the implementation: `api` (REST API, what the Quarkus app ships) or `local` (`localStorage`). The Pages workflow ([`.github/workflows/pages.yml`](.github/workflows/pages.yml)) copies the static files and overwrites `config.js` with `local`. Nothing else differs. See [ADR-0003](docs/adr/0003-swappable-task-store-for-browser-demo.md).
 
-The workflow runs on every push to `master`. Before its first run, the repository needs one setting: **Settings → Pages → Build and deployment → Source: "GitHub Actions"**.
+The workflow runs on pushes to `master` that change the page files or the workflow itself, and by hand under **Actions → Deploy demo to GitHub Pages → Run workflow**. To redeploy, start a new run there; don't use "Re-run jobs" on a failed run (it finds the earlier upload twice and fails again). Before its first run, the repository needs one setting: **Settings → Pages → Build and deployment → Source: "GitHub Actions"**.
 
 ## Where the reasoning lives
 

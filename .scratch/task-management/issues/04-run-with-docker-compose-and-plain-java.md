@@ -28,7 +28,7 @@ docker compose down                  # stop; Tasks stay in the task-management_d
 docker compose down -v               # stop and delete the data
 ```
 
-Verified: the app logs "Profile prod activated" and Flyway "Successfully applied 1 migration"; `POST /api/tasks` returned 201-style JSON with an id, `GET /api/tasks` listed it, `GET /` returned 200. After `docker compose down` and `docker compose up -d`, the Task was still listed.
+Verified: the app logs "Profile prod activated" and Flyway "Successfully applied 1 migration"; `POST /api/tasks` returned 201 with the new Task, `GET /api/tasks` listed it, `GET /` returned 200. After `docker compose down` and `docker compose up -d`, the Task was still listed.
 
 Plain-Java route (needs Java 17 and Docker):
 
@@ -48,6 +48,6 @@ Dev mode and tests (Dev Services):
 ./mvnw test
 ```
 
-Verified: both started a Dev Services `postgres:16-alpine` container even while the Compose db was running on port 5432. Dev mode listed no Tasks (separate database). `./mvnw test`: 12 tests, 0 failures, before merging ticket 02.
+Verified: both started a Dev Services `postgres:16-alpine` container even while the Compose db was running on port 5432. Dev mode listed no Tasks (separate database). `./mvnw test`: 12 tests green before merging ticket 02, 23 tests green after. After the merge, `docker compose up --build` was re-run: POST 201, PATCH `{"done":true}` 200, list order correct.
 
 Notes for the README (ticket 06): on Windows, `./mvnw` needs Git Bash, or use `mvnw.cmd`. Port 5432 must be free for the Compose db.

@@ -78,7 +78,23 @@ function renderTask(task) {
   priority.dataset.priority = task.priority;
   priority.textContent = task.priority;
 
-  item.append(done, name, priority);
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.textContent = 'Delete';
+  remove.setAttribute('aria-label', `Delete: ${task.name}`);
+  remove.addEventListener('click', async () => {
+    remove.disabled = true;
+    try {
+      await store.remove(task.id);
+    } catch (error) {
+      // Typically a 404: the Task was already deleted elsewhere. The reload drops it from the list.
+      await refresh(error.message);
+      return;
+    }
+    await refresh();
+  });
+
+  item.append(done, name, priority, remove);
   return item;
 }
 

@@ -16,8 +16,8 @@ export class ApiTaskStore {
     return this.#request('PATCH', `${this.baseUrl}/${encodeURIComponent(id)}`, changes);
   }
 
-  async remove(id) {
-    throw new Error('Deleting a Task is not available yet.');
+  remove(id) {
+    return this.#request('DELETE', `${this.baseUrl}/${encodeURIComponent(id)}`);
   }
 
   async #request(method, url, body) {

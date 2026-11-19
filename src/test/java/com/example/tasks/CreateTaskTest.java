@@ -77,6 +77,11 @@ class CreateTaskTest {
                 .body("name", equalTo(name));
     }
 
+    @Test
+    void unknownPriorityIsRejected() {
+        rejected("{\"name\": \"Water plants\", \"priority\": \"HIGH\"}", "priority");
+    }
+
     /** Posts the body and expects a 400 whose readable message mentions the given text. */
     private static void rejected(String body, String messageMentions) {
         given()

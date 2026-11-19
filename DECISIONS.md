@@ -80,6 +80,8 @@ Flyway keeps every schema change as a reviewed, versioned SQL file. It records w
 - `Task` is the entity (one object = one row) and it enforces its own rules. New tasks are only made through `Task.create(name, priority)`, which sets `created` and `done = false`. Changes only go through `rename(...)` and `markDone(...)`. There is no way to change `priority` or `created`.
 - Database access uses Panache's built-in methods. There is no separate repository or service class.
 
+*(It ended up as three classes, not two: `ErrorMappers` turns rejected requests into the readable `{"message": "..."}` body (D22, D29). It holds no rules, only HTTP error mapping. After the code review there are also two small helpers next to `TaskResource`: the `@TaskName` constraint and `StrictJsonTypes` (D47). The structure is otherwise as described: no service or repository layer, and the rules stay in `Task`.)*
+
 **Alternatives:** A three-layer Resource → Service → Repository design; an "anemic" entity with public setters and the rules somewhere else.
 **Why:** No use case coordinates several things, so a service layer would only pass calls through. Putting the rules on the entity (a "rich domain model") means no code path can bypass them. A service layer is the next step if multi-step use cases appear.
 
@@ -109,7 +111,7 @@ Priority is stored as text (`'URGENT'`), not as a number, so reordering the list
 **Decision:** A multi-stage Dockerfile builds the JAR with Maven inside the container, so a reviewer needs no Java. Compose starts Postgres and the app. The README also documents the plain-Java route the brief asks for: `docker compose up db`, then `./mvnw package`, then `java -jar target/quarkus-app/quarkus-run.jar`. The Maven wrapper is included. Developers use `./mvnw quarkus:dev`, which starts Postgres via Dev Services. *(The README uses `docker compose up -d db`, so the JAR can run in the same terminal; see D44. The Docker setup itself is D32–D35.)*
 
 ### D15. Tests: API-level tests against real Postgres
-**Decision:** A handful of `@QuarkusTest` + RestAssured tests. They cover create, change and delete, and the rule violations: blank name, unknown id, and attempts to change priority or set `created`. They run against a real Postgres started automatically. No frontend tests and no mock-heavy unit tests. *(It ended up as 26 tests in four classes, one per use case: create, list, change, delete. Still all at the HTTP API.)*
+**Decision:** A handful of `@QuarkusTest` + RestAssured tests. They cover create, change and delete, and the rule violations: blank name, unknown id, and attempts to change priority or set `created`. They run against a real Postgres started automatically. No frontend tests and no mock-heavy unit tests. *(It ended up as 26 tests in four classes, one per use case: create, list, change, delete. Still all at the HTTP API. After the code review it is 34 tests, and the four classes share their HTTP calls through one small `TaskApi` helper.)*
 **Why:** Tests at the HTTP boundary check what the reviewer actually sees, survive internal refactoring, and use the same database as production.
 
 ### D16. UI: English, one page, classless CSS
@@ -147,7 +149,7 @@ Priority is stored as text (`'URGENT'`), not as a number, so reordering the list
 **Why:** The page shows `message` inline as-is (D16), and any API client gets the same predictable shape.
 
 ### D23. The name is trimmed before it is validated
-**Decision:** The request object trims the name (`String.strip()`, Unicode whitespace) before `@NotBlank`/`@Size(max = 255)` run. The entity factory trims again.
+**Decision:** The request object trims the name (`String.strip()`, Unicode whitespace) before `@NotBlank`/`@Size(max = 255)` run. The entity factory trims again. *(After the code review the trim follows JavaScript's `trim()` instead of `String.strip()`, see D46, and both request objects share the rules through `@TaskName`.)*
 **Why:** The 255-character limit applies to the stored name. A 255-character name with surrounding spaces should be accepted. The second trim in the entity keeps the rule true for any future caller (D11).
 
 ### D24. Created is stored at microsecond precision
@@ -264,6 +266,34 @@ Priority is stored as text (`'URGENT'`), not as a number, so reordering the list
 
 ---
 
+## Code review (2026-11-19)
+
+The finished integration branch was reviewed on two axes, the repo's standards and the spec with this log. The findings were fixed in one follow-up branch. These are the decisions it made or recorded.
+
+### D46. Names are trimmed exactly like JavaScript's `trim()`
+**Decision:** `Task.trimName` removes the characters that JavaScript's `String.prototype.trim()` removes: tab, line feed, vertical tab, form feed, carriage return, the byte order mark (U+FEFF), the line and paragraph separators, and every Unicode space separator, including the no-break spaces U+00A0, U+2007 and U+202F. The request objects and the entity both use it.
+**Alternatives:** Keep `String.strip()` on the server and copy its rules into the demo by hand.
+**Why:** `String.strip()` keeps no-break spaces, so the API accepted a name made only of U+00A0 while the demo rejected it as blank. User story 41 asks the demo to behave like the real app. JavaScript's rule is the one the browser already has built in, so the server copies it, not the other way round. Tests pin down that such a name is rejected and that the characters are trimmed around a real name.
+
+### D47. Request values must have the right JSON type
+**Decision:** `StrictJsonTypes` configures Jackson to refuse conversions: a number or boolean is not a `name`, a string or number is not `done`, and a number is not a `priority` (by default Jackson reads `1` as the second constant, NORMAL). Each is a 400: "Invalid value for name", "Invalid value for done", "Invalid priority '1'. Allowed values: LOW, NORMAL, URGENT". The local store uses the same message for a name that is not a string.
+**Alternatives:** Leave Jackson's lenient defaults and accept `{"done": "true"}`.
+**Why:** The demo already rejected these values, so the API and the demo disagreed (user story 41). Rejecting them also fits D12: the API refuses what it doesn't expect instead of guessing.
+
+### D48. The JSON error mapper names `MismatchedInputException` explicitly
+**Decision:** `ErrorMappers.unreadableBody` is registered for `JsonProcessingException` and `MismatchedInputException`. The two subclasses that were also listed (`InvalidFormatException`, `UnrecognizedPropertyException`) were removed.
+**Why:** Quarkus picks the mapper registered for the closest exception type, and it ships its own mapper for `MismatchedInputException`. Without naming it, that built-in mapper wins for wrong types, unknown enum values and unknown fields (ten tests failed when it was left out). Its subclasses need no entry of their own, because our entry is already closer than the parent `JsonProcessingException`.
+
+### D49. An empty list shows "No Tasks yet."
+**Decision:** When there are no Tasks, the page shows the line "No Tasks yet." where the list would be. It disappears as soon as a Task exists.
+**Why:** The spec doesn't describe the empty state. A blank area below the form looks broken on first visit, especially in the demo, where every reviewer starts with an empty list.
+
+### D50. Pressing Enter on a focused name starts a rename
+**Decision:** Each name can be reached with Tab, and pressing Enter on it opens the inline rename, the same as clicking it (D31).
+**Why:** The spec only says "click to edit". Without a keyboard way in, renaming would be the only action on the page that needs a mouse. Enter is also the key that saves the rename, so the keyboard flow stays simple.
+
+---
+
 ## How this was built
 
 1. **Grilling session.** The author worked through every open question with an agent, as a decision tree. The answers are D1–D18 in this file, the ADRs and the glossary.
@@ -272,4 +302,4 @@ Priority is stored as text (`'URGENT'`), not as a number, so reordering the list
 4. **Parallel agent implementers in worktrees.** An orchestrating agent handed each unblocked ticket to its own implementer agent. Each implementer worked in a separate git worktree on its own `ticket/NN-...` branch, so tickets that didn't depend on each other (for example 02 and 04, or 03 and 05) were built at the same time.
 5. **Test-first.** Each implementer agreed the seam first (the HTTP API, D15) and then worked red → green, one test and one small piece of code at a time. Docs-only and frontend work was checked by running it (D42, D44). Decisions made along the way were appended here (D19 onwards).
 6. **Integration branch.** Finished tickets were merged into `feature/task-management`. A ticket that started before another one landed merged the integration branch back in and re-ran the tests before handing over (visible as merge commits in the history). The orchestrator, not the implementers, closed the tickets.
-7. **Code review at the end.** Once all tickets are merged, the whole integration branch is reviewed against the repo's standards and against the spec and these decisions, before it goes to `master`. Refactoring belongs to this review, not to the red → green loop.
+7. **Code review at the end.** Once all tickets were merged, the whole integration branch was reviewed on two axes: against the repo's standards, and against the spec and these decisions. All findings were fixed in one follow-up branch, test-first where behaviour changed (D46–D50), and merged into the integration branch before it went to `master`. Refactoring belongs to this review, not to the red → green loop.

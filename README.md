@@ -97,4 +97,4 @@ The workflow runs on every push to `master`. Before its first run, the repositor
 - [`GLOSSARY.md`](GLOSSARY.md): the domain words (Task, Priority, Done, Created)
 - [`.scratch/task-management/`](.scratch/task-management/): the spec and the tickets the work was split into
 
-This project was built with AI coding agents, directed by me. I settled the requirements and the architecture; agents wrote most of the code, test-first. The decision log is the record of who decided what.
+This project was built with AI coding agents, directed by me. I settled the requirements and the architecture; agents wrote most of the code, test-first. At the end, the whole branch was reviewed against the repo's standards and against the spec, and the findings were fixed in one follow-up branch. The decision log is the record of who decided what.

@@ -2,7 +2,7 @@
 
 # task-management-demo
 
-A small task list app, built as the Fairsource interview task. You create Tasks with a name and a Priority (LOW, NORMAL, URGENT), mark them Done or not Done, rename them and delete them, all on one simple web page. The brief asks for a Quarkus 3 or Spring Boot 3 app (Java 17, Maven, JAR packaging) that stores Tasks in Postgres and runs either directly with Java or as a Docker container. This repo uses Quarkus 3 with a small JSON REST API and one plain HTML/JavaScript page.
+A small task list app, built as an interview task. You create Tasks with a name and a Priority (LOW, NORMAL, URGENT), mark them Done or not Done, rename them and delete them, all on one simple web page. The brief asks for a Quarkus 3 or Spring Boot 3 app (Java 17, Maven, JAR packaging) that stores Tasks in Postgres and runs either directly with Java or as a Docker container. This repo uses Quarkus 3 with a small JSON REST API and one plain HTML/JavaScript page.
 
 **Try it in your browser:** <https://george713.github.io/task-management-demo/>
 

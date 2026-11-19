@@ -184,6 +184,27 @@ Priority is stored as text (`'URGENT'`), not as a number, so reordering the list
 
 ---
 
+## Implementation: ticket 04, Docker Compose and plain Java (2026-11-19)
+
+### D32. One root `Dockerfile` and `compose.yaml`; the generated Dockerfiles are gone
+**Decision:** A multi-stage `Dockerfile` at the repo root (build: `eclipse-temurin:17-jdk` + Maven wrapper; runtime: `eclipse-temurin:17-jre-alpine`, non-root user, `java -jar quarkus-run.jar`) and a `compose.yaml` with a fixed project name `task-management`. The four generated files under `src/main/docker/` are deleted. `.dockerignore` now excludes `target/`, `.git` and docs instead of allowing only `target/`.
+**Alternatives:** Keep the generated `Dockerfile.jvm` (UBI 9 OpenJDK runtime). It copies a JAR built on the host, so the reviewer would need Java, which breaks D14.
+**Why:** The root files are what `docker compose up --build` finds by default. The fixed project name gives the data volume the same name (`task-management_db-data`) whatever the checkout folder is called.
+
+### D33. The Docker build skips the tests
+**Decision:** The build stage runs `./mvnw package -DskipTests`.
+**Why:** The tests need Docker for Dev Services, which a build container doesn't have. They run with `./mvnw test`, and in the plain-Java route `./mvnw package` runs them too.
+
+### D34. The wrapper's checksum is protected from Windows line endings and missing `unzip`
+**Decision:** `.gitattributes` forces LF for `.mvn/wrapper/maven-wrapper.properties`, and the build stage installs `unzip`.
+**Why:** Both broke the build with "Failed to validate Maven distribution SHA-256". With `core.autocrlf=true`, the checksum line ends in `\r`. Without `unzip`, the wrapper downloads the `.tar.gz` while the pinned checksum is for the `.zip`. Dropping the checksum would have hidden the problem instead of fixing it.
+
+### D35. Dev Services use the same Postgres image as Compose
+**Decision:** `quarkus.datasource.devservices.image-name=postgres:16-alpine`.
+**Why:** Quarkus 3.40 Dev Services default to `postgres:18`. D15 says the tests use the same database as production, so the version has to match too.
+
+---
+
 ## How this was built
 
 1. **Grilling session.** Every open question was worked through as a decision tree. The answers are recorded in this file, in the ADRs and in the glossary.

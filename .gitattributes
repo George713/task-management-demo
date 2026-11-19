@@ -1,0 +1,7 @@
+# Shell scripts must keep Unix line endings, or they break inside Linux containers
+# (e.g. the Maven wrapper in the Docker build: "/bin/sh^M: bad interpreter").
+mvnw    text eol=lf
+*.sh    text eol=lf
+# Windows batch files need Windows line endings.
+*.cmd   text eol=crlf
+*.bat   text eol=crlf

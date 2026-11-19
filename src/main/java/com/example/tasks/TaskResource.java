@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -13,6 +14,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.time.Instant;
+import java.util.List;
 
 /** HTTP layer for Tasks: JSON in, validation, one transaction per change, JSON out. No business rules. */
 @Path("/api/tasks")
@@ -41,6 +43,11 @@ public class TaskResource {
         static TaskResponse from(Task task) {
             return new TaskResponse(task.getId(), task.getName(), task.isDone(), task.getCreated(), task.getPriority());
         }
+    }
+
+    @GET
+    public List<TaskResponse> list() {
+        return Task.listInDisplayOrder().stream().map(TaskResponse::from).toList();
     }
 
     @POST

@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 import java.time.Instant;
+import java.util.List;
 
 /**
  * A single piece of work someone wants to remember. One object is one row.
@@ -50,6 +51,23 @@ public class Task extends PanacheEntityBase {
         task.created = Instant.now();
         task.done = false;
         return task;
+    }
+
+    /**
+     * All Tasks in display order: open before Done, then URGENT, NORMAL, LOW, then newest Created
+     * first (id breaks exact ties). Priority is stored as text, so its order is spelled out
+     * explicitly instead of sorting alphabetically.
+     */
+    public static List<Task> listInDisplayOrder() {
+        return list("""
+                order by done,
+                    case priority
+                        when com.example.tasks.Priority.URGENT then 0
+                        when com.example.tasks.Priority.NORMAL then 1
+                        else 2
+                    end,
+                    created desc,
+                    id desc""");
     }
 
     public Long getId() {

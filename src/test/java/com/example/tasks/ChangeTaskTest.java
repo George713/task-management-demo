@@ -27,6 +27,24 @@ class ChangeTaskTest {
     }
 
     @Test
+    void markDoneAndUnmarkDoneKeepTheOtherFields() {
+        JsonPath task = create("Water plants", "LOW");
+        long id = task.getLong("id");
+
+        patch(id, "{\"done\": true}")
+                .statusCode(200)
+                .body("done", equalTo(true))
+                .body("name", equalTo("Water plants"))
+                .body("priority", equalTo("LOW"))
+                .body("created", equalTo(task.getString("created")));
+
+        patch(id, "{\"done\": false}")
+                .statusCode(200)
+                .body("done", equalTo(false))
+                .body("name", equalTo("Water plants"));
+    }
+
+    @Test
     void changingAnUnknownTaskIsNotFound() {
         patch(Long.MAX_VALUE, "{\"done\": true}")
                 .statusCode(404)

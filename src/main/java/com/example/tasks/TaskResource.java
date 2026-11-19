@@ -88,6 +88,9 @@ public class TaskResource {
         if (request != null && request.name() != null) {
             task.rename(request.name());
         }
+        if (request != null && request.done() != null) {
+            task.markDone(request.done());
+        }
         return TaskResponse.from(task);
     }
 

@@ -61,6 +61,11 @@ public class Task extends PanacheEntityBase {
         this.name = name.strip();
     }
 
+    /** Marks the Task as Done, or un-marks it. */
+    public void markDone(boolean done) {
+        this.done = done;
+    }
+
     /**
      * All Tasks in display order: open before Done, then URGENT, NORMAL, LOW, then newest Created
      * first (id breaks exact ties). Priority is stored as text, so its order is spelled out

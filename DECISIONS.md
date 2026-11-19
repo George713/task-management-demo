@@ -163,7 +163,7 @@ Priority is stored as text (`'URGENT'`), not as a number, so reordering the list
 **Why:** Tests only use the HTTP API (D15), and a Done Task can't be made through the API until `PATCH` exists. Writing it into the database directly would bypass the seam. Ticket 02 already lists "a Done Task moves below open Tasks" as a test.
 
 ### D27. Frontend files and pinned stylesheet
-**Decision:** The page lives in `src/main/resources/META-INF/resources/`: `index.html`, `app.js` (UI), `task-store.js` (interface and factory), `api-task-store.js`, and the one-line `config.js` (`export const TASK_STORE = 'api';`). Pico.css 2.1.1 (classless build) is loaded from jsDelivr. Priority badges are `<mark>` elements coloured by a few lines of inline CSS. Until tickets 02 and 03, `update`/`remove` reject with "not available yet".
+**Decision:** The page lives in `src/main/resources/META-INF/resources/`: `index.html`, `app.js` (UI), `task-store.js` (interface and factory), `api-task-store.js`, and the one-line `config.js` (`export const TASK_STORE = 'api';`). Pico.css 2.1.1 (classless build) is loaded from jsDelivr. Priority badges are `<mark>` elements coloured by a few lines of inline CSS. *(Ticket 01 also had `update`/`remove` reject with "not available yet"; tickets 02 and 03 replaced those placeholders, and ticket 05 added `local-task-store.js`, see D38.)*
 
 ### D28. PATCH treats a null field like a missing one; no body is an empty PATCH
 **Decision:** In `PATCH /api/tasks/{id}`, `"name": null` or `"done": null` means "leave unchanged", same as leaving the field out. A request with no body at all is handled like `{}`: 200 with the unchanged Task. A name that is sent is trimmed, then must be 1 to 255 characters.
@@ -216,6 +216,34 @@ Priority is stored as text (`'URGENT'`), not as a number, so reordering the list
 **Decision:** Each row has a "Delete" button. Clicking it deletes the Task straight away and reloads the list. If the delete fails (for example a 404 because another tab already deleted it), the list is reloaded and the message is shown above it, the same as a failed Done toggle (D31).
 **Alternatives:** A browser `confirm()` or an undo option.
 **Why:** The spec asks for a delete button and nothing more, and undo is out of scope. A confirmation step would be UI behaviour nobody asked for.
+
+---
+
+## Implementation: ticket 05, browser demo and GitHub Pages (2026-11-19)
+
+### D38. The local store copies the server's messages word for word, and checks in the same order
+**Decision:** `local-task-store.js` rejects with the exact texts the API sends ("Name must not be blank", "Name must be at most 255 characters", "Invalid priority 'HIGH'. Allowed values: LOW, NORMAL, URGENT", "Field 'priority' is not allowed. Allowed fields: done, name", "Task 3 was not found. It may have been deleted."). Its checks run in the server's order: request shape first (Priority, unknown fields), then the name, then whether the Task exists. Ids count up from 1, and a failed create uses no id. Created is `new Date().toISOString()` (millisecond precision, still ISO-8601 UTC). Ties in the sort fall back to newest id, the same as D25.
+**Alternatives:** Generic demo messages such as "Invalid name".
+**Why:** User story 41 asks for a faithful preview, and the page shows the message as-is (D22). Matching the texts means the demo looks exactly like the real app, including its error states.
+
+### D39. Stored as one JSON entry: `{nextId, tasks}`
+**Decision:** All demo Tasks live under one `localStorage` key, `task-management-demo.tasks`, as `{"nextId": n, "tasks": [...]}`. Every operation reads the entry, changes it and writes it back. Reset removes the key, so ids start again from 1. If the entry can't be parsed, or storage is blocked, the store rejects with a readable message that points to the "Reset demo" button, and the page shows it like any other error.
+**Alternatives:** One key per Task; an id counter derived from the highest stored id.
+**Why:** It is the smallest format that keeps ids unique after deletes. A deleted id is never reused, the same as the Postgres identity column. Read-modify-write on a few dozen Tasks costs nothing. Two tabs writing at the same moment could lose a change, which is acceptable because cross-tab sync is out of scope.
+
+### D40. The page shows demo mode only when the store can be reset
+**Decision:** `reset()` is an extra operation that only the local store offers (documented in `task-store.js`). `app.js` shows the banner ("Demo mode: tasks are stored in your browser only, not in Postgres") and the "Reset demo" button if, and only if, the store has `reset`. The banner sits in `index.html`, hidden by default. Reset deletes immediately, without a confirmation, like Delete (D37).
+**Alternatives:** `app.js` reads `TASK_STORE === 'local'` itself; a separate `isDemo` flag.
+**Why:** The UI keeps talking only to the store (D8). Switching `config.js` is the one change between the modes, and the demo controls can't appear for a store that can't reset.
+
+### D41. The Pages workflow copies the static folder and overwrites `config.js`
+**Decision:** `.github/workflows/pages.yml` runs on every push to `master` (and by hand through `workflow_dispatch`). It copies `src/main/resources/META-INF/resources/` into `_site/`, overwrites `_site/config.js` with `export const TASK_STORE = 'local';`, and deploys with the official `actions/upload-pages-artifact@v3` and `actions/deploy-pages@v4`. Nothing is built. Before the first run, the repository needs one setting: Settings → Pages → Source: "GitHub Actions" (to be covered in the README, ticket 06). The workflow was checked with `actionlint` and its copy step was run locally. It can't run for real until it is pushed.
+**Alternatives:** A `gh-pages` branch built by a third-party action; editing `config.js` in place with `sed`.
+**Why:** The deployed page is exactly the one Quarkus serves, apart from that one line, so the demo always matches the latest UI (user story 53). All page URLs are relative (`app.js`, `api/tasks`), so it works under the `/<repo>/` path that Pages uses. Writing the whole one-line file is simpler and fails more visibly than a pattern replacement.
+
+### D42. The local store is checked by hand, plus a throwaway script
+**Decision:** No automated frontend test was added (spec, D15). Besides the clicks in the browser in both modes, the local store's rules were exercised once with a throwaway Node script against an in-memory storage. That script isn't committed.
+**Why:** The spec keeps the HTTP API as the only automated seam. The script was a quick way to catch mistakes while writing the store, not a test suite to maintain.
 
 ---
 

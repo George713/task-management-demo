@@ -5,9 +5,13 @@ import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+import java.util.Map;
+
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsStringIgnoringCase;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @QuarkusTest
 class ChangeTaskTest {
@@ -45,11 +49,57 @@ class ChangeTaskTest {
     }
 
     @Test
+    void renameAndMarkDoneInOnePatchArePersisted() {
+        long id = create("Call mum", "NORMAL").getLong("id");
+
+        patch(id, "{\"name\": \"Call dad\", \"done\": true}")
+                .statusCode(200)
+                .body("name", equalTo("Call dad"))
+                .body("done", equalTo(true));
+
+        Map<String, Object> listed = listed(id);
+        assertEquals("Call dad", listed.get("name"));
+        assertEquals(true, listed.get("done"));
+    }
+
+    @Test
+    void emptyPatchLeavesTheTaskUnchanged() {
+        JsonPath task = create("Read a book", "LOW");
+        long id = task.getLong("id");
+
+        Map<String, Object> afterEmptyObject = patch(id, "{}").statusCode(200).extract().jsonPath().getMap("$");
+        assertEquals(task.getMap("$"), afterEmptyObject);
+
+        Map<String, Object> afterNoBody = given()
+                .contentType(ContentType.JSON)
+        .when()
+                .patch("/api/tasks/" + id)
+        .then()
+                .statusCode(200)
+                .extract().jsonPath().getMap("$");
+        assertEquals(task.getMap("$"), afterNoBody);
+        assertEquals(task.getMap("$"), listed(id));
+    }
+
+    @Test
     void changingAnUnknownTaskIsNotFound() {
         patch(Long.MAX_VALUE, "{\"done\": true}")
                 .statusCode(404)
                 .contentType(ContentType.JSON)
                 .body("message", containsStringIgnoringCase("not found"));
+    }
+
+    /** The Task with this id as GET /api/tasks returns it. */
+    private static Map<String, Object> listed(long id) {
+        List<Map<String, Object>> tasks = given()
+        .when()
+                .get("/api/tasks")
+        .then()
+                .statusCode(200)
+                .extract().jsonPath().getList("$");
+        return tasks.stream()
+                .filter(task -> ((Number) task.get("id")).longValue() == id)
+                .findFirst().orElseThrow();
     }
 
     private static JsonPath create(String name, String priority) {

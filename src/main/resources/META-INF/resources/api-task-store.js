@@ -1,23 +1,22 @@
 // Task store backed by the REST API at /api/tasks.
-export class ApiTaskStore {
-  constructor(baseUrl = 'api/tasks') {
-    this.baseUrl = baseUrl;
-  }
+// Relative, so the page also works when it is not served from the site root.
+const BASE_URL = 'api/tasks';
 
+export class ApiTaskStore {
   list() {
-    return this.#request('GET', this.baseUrl);
+    return this.#request('GET', BASE_URL);
   }
 
   create(name, priority) {
-    return this.#request('POST', this.baseUrl, { name, priority });
+    return this.#request('POST', BASE_URL, { name, priority });
   }
 
   update(id, changes) {
-    return this.#request('PATCH', `${this.baseUrl}/${encodeURIComponent(id)}`, changes);
+    return this.#request('PATCH', `${BASE_URL}/${encodeURIComponent(id)}`, changes);
   }
 
   remove(id) {
-    return this.#request('DELETE', `${this.baseUrl}/${encodeURIComponent(id)}`);
+    return this.#request('DELETE', `${BASE_URL}/${encodeURIComponent(id)}`);
   }
 
   async #request(method, url, body) {

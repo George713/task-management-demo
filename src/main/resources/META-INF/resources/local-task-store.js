@@ -5,13 +5,10 @@ const PRIORITIES = ['LOW', 'NORMAL', 'URGENT'];
 const PRIORITY_ORDER = { URGENT: 0, NORMAL: 1, LOW: 2 };
 const CHANGEABLE_FIELDS = ['done', 'name'];
 const MAX_NAME_LENGTH = 255;
+const STORAGE_KEY = 'task-management-demo.tasks';
+const STORAGE_UNAVAILABLE = 'Browser storage is not available, so the demo cannot store Tasks.';
 
 export class LocalTaskStore {
-  constructor(storage = window.localStorage, key = 'task-management-demo.tasks') {
-    this.storage = storage;
-    this.key = key;
-  }
-
   async list() {
     return this.#load().tasks.sort(displayOrder);
   }
@@ -74,9 +71,9 @@ export class LocalTaskStore {
   // Demo only: forget every stored Task and start the ids again from 1.
   async reset() {
     try {
-      this.storage.removeItem(this.key);
+      localStorage.removeItem(STORAGE_KEY);
     } catch {
-      throw new Error('Browser storage is not available, so the demo cannot store Tasks.');
+      throw new Error(STORAGE_UNAVAILABLE);
     }
   }
 
@@ -84,9 +81,9 @@ export class LocalTaskStore {
   #load() {
     let raw;
     try {
-      raw = this.storage.getItem(this.key);
+      raw = localStorage.getItem(STORAGE_KEY);
     } catch {
-      throw new Error('Browser storage is not available, so the demo cannot store Tasks.');
+      throw new Error(STORAGE_UNAVAILABLE);
     }
     if (raw === null) {
       return { nextId: 1, tasks: [] };
@@ -104,7 +101,7 @@ export class LocalTaskStore {
 
   #save(data) {
     try {
-      this.storage.setItem(this.key, JSON.stringify(data));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch {
       throw new Error('The demo Tasks could not be saved in browser storage.');
     }

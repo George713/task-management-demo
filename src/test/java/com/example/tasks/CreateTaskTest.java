@@ -82,6 +82,26 @@ class CreateTaskTest {
         rejected("{\"name\": \"Water plants\", \"priority\": \"HIGH\"}", "priority");
     }
 
+    @Test
+    void malformedJsonIsRejected() {
+        rejected("{\"name\": \"Water plants\"", "malformed");
+    }
+
+    @Test
+    void clientSuppliedCreatedIsRejected() {
+        rejected("{\"name\": \"Water plants\", \"created\": \"2020-01-01T00:00:00Z\"}", "created");
+    }
+
+    @Test
+    void clientSuppliedDoneIsRejected() {
+        rejected("{\"name\": \"Water plants\", \"done\": true}", "done");
+    }
+
+    @Test
+    void clientSuppliedIdIsRejected() {
+        rejected("{\"name\": \"Water plants\", \"id\": 42}", "id");
+    }
+
     /** Posts the body and expects a 400 whose readable message mentions the given text. */
     private static void rejected(String body, String messageMentions) {
         given()

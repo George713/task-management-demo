@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
@@ -69,5 +70,18 @@ public class ErrorMappers {
     private static String fieldName(JsonMappingException e) {
         List<JsonMappingException.Reference> path = e.getPath();
         return path.isEmpty() ? "value" : path.get(path.size() - 1).getFieldName();
+    }
+
+    /**
+     * Quarkus wraps a syntax error in the JSON body (e.g. a missing closing brace) in a plain
+     * 400 WebApplicationException with an empty body. Give it the readable message too; every
+     * other WebApplicationException keeps its own response.
+     */
+    @ServerExceptionMapper
+    public Response webApplication(WebApplicationException e) {
+        if (e.getCause() instanceof JsonProcessingException json) {
+            return unreadableBody(json);
+        }
+        return e.getResponse();
     }
 }

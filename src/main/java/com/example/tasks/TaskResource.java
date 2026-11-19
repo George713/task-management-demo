@@ -20,7 +20,11 @@ import java.time.Instant;
 @Produces(MediaType.APPLICATION_JSON)
 public class TaskResource {
 
-    /** The fields a client may send when creating a Task. The name is trimmed before it is validated. */
+    /**
+     * The fields a client may send when creating a Task. Any other field (id, done, created) is
+     * refused rather than silently ignored (D12, see
+     * quarkus.jackson.fail-on-unknown-properties). The name is trimmed before it is validated.
+     */
     public record CreateTaskRequest(
             @NotBlank(message = "Name must not be blank")
             @Size(max = 255, message = "Name must be at most 255 characters")

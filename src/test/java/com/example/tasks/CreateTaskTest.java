@@ -1,0 +1,41 @@
+package com.example.tasks;
+
+import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.http.ContentType;
+import org.junit.jupiter.api.Test;
+
+import java.time.Duration;
+import java.time.Instant;
+
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@QuarkusTest
+class CreateTaskTest {
+
+    @Test
+    void createWithNameOnlyTrimsNameAndAppliesDefaults() {
+        Instant before = Instant.now();
+
+        String created = given()
+                .contentType(ContentType.JSON)
+                .body("{\"name\": \"  Buy milk  \"}")
+        .when()
+                .post("/api/tasks")
+        .then()
+                .statusCode(201)
+                .contentType(ContentType.JSON)
+                .body("id", notNullValue())
+                .body("name", equalTo("Buy milk"))
+                .body("done", equalTo(false))
+                .body("priority", equalTo("NORMAL"))
+                .extract().path("created");
+
+        Instant createdAt = Instant.parse(created);
+        Duration tolerance = Duration.ofSeconds(5);
+        assertTrue(!createdAt.isBefore(before.minus(tolerance)) && !createdAt.isAfter(Instant.now().plus(tolerance)),
+                "created should be the current instant, was " + createdAt);
+    }
+}

@@ -165,6 +165,23 @@ Priority is stored as text (`'URGENT'`), not as a number, so reordering the list
 ### D27. Frontend files and pinned stylesheet
 **Decision:** The page lives in `src/main/resources/META-INF/resources/`: `index.html`, `app.js` (UI), `task-store.js` (interface and factory), `api-task-store.js`, and the one-line `config.js` (`export const TASK_STORE = 'api';`). Pico.css 2.1.1 (classless build) is loaded from jsDelivr. Priority badges are `<mark>` elements coloured by a few lines of inline CSS. Until tickets 02 and 03, `update`/`remove` reject with "not available yet".
 
+### D28. PATCH treats a null field like a missing one; no body is an empty PATCH
+**Decision:** In `PATCH /api/tasks/{id}`, `"name": null` or `"done": null` means "leave unchanged", same as leaving the field out. A request with no body at all is handled like `{}`: 200 with the unchanged Task. A name that is sent is trimmed, then must be 1 to 255 characters.
+**Why:** It is the simplest reading of "fields left out stay unchanged". Neither field can ever be null in a Task, so a null can't mean "clear it".
+
+### D29. A 404 uses the same `{"message": "..."}` body as a 400
+**Decision:** Changing an unknown id returns 404 with a message like "Task 42 was not found. It may have been deleted."
+**Why:** The page shows `message` inline (D16, D22). A Task deleted in another tab then gets an explanation instead of a bare status code.
+
+### D30. Priority or Created in a PATCH gets the generic unknown-field message
+**Decision:** The PATCH request object declares only `name` and `done`. A `priority` or `created` field is refused by the global unknown-field rule (D21): "Field 'priority' is not allowed. Allowed fields: done, name".
+**Alternatives:** A special message such as "Priority can't be changed after creation".
+**Why:** It needs no extra code, and the message already says which fields are allowed.
+
+### D31. Inline rename: Enter saves, Escape or leaving the field cancels
+**Decision:** Clicking a name (or pressing Enter on it) swaps it for an input. Enter saves; Escape or clicking elsewhere cancels without saving. If saving fails, the input stays open with the message below it. A failed Done toggle reloads the list, so the checkbox shows the real state again, and shows the message above the list.
+**Why:** The spec defines only Enter and Escape. Cancelling on blur means a change is saved only on an explicit Enter.
+
 ---
 
 ## How this was built

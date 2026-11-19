@@ -12,8 +12,8 @@ export class ApiTaskStore {
     return this.#request('POST', this.baseUrl, { name, priority });
   }
 
-  async update(id, changes) {
-    throw new Error('Changing a Task is not available yet.');
+  update(id, changes) {
+    return this.#request('PATCH', `${this.baseUrl}/${encodeURIComponent(id)}`, changes);
   }
 
   async remove(id) {

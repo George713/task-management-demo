@@ -24,19 +24,20 @@ class ListTasksTest {
         create("normal", "NORMAL");
         create("newer urgent", "URGENT");
 
-        List<String> names = given()
-        .when()
-                .get("/api/tasks")
-        .then()
-                .statusCode(200)
-                .contentType(ContentType.JSON)
-                .extract().jsonPath().getList("name", String.class);
+        assertEquals(List.of("newer urgent", "older urgent", "normal", "low"), myNames());
+    }
 
-        List<String> mine = names.stream()
-                .filter(name -> name.startsWith(marker))
-                .map(name -> name.substring(marker.length() + 1))
-                .toList();
-        assertEquals(List.of("newer urgent", "older urgent", "normal", "low"), mine);
+    @Test
+    void doneTasksAreListedBelowOpenTasks() {
+        long doneUrgent = create("done urgent", "URGENT");
+        create("open low", "LOW");
+        long doneNormal = create("done normal", "NORMAL");
+        create("open urgent", "URGENT");
+
+        markDone(doneUrgent);
+        markDone(doneNormal);
+
+        assertEquals(List.of("open urgent", "open low", "done urgent", "done normal"), myNames());
     }
 
     @Test
@@ -60,13 +61,40 @@ class ListTasksTest {
         assertEquals(List.of(created), listed.stream().filter(task -> task.get("id").equals(created.get("id"))).toList());
     }
 
-    private void create(String name, String priority) {
-        given()
+    /** The names of this test's own Tasks, in list order, without the marker. */
+    private List<String> myNames() {
+        List<String> names = given()
+        .when()
+                .get("/api/tasks")
+        .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .extract().jsonPath().getList("name", String.class);
+
+        return names.stream()
+                .filter(name -> name.startsWith(marker))
+                .map(name -> name.substring(marker.length() + 1))
+                .toList();
+    }
+
+    private long create(String name, String priority) {
+        return given()
                 .contentType(ContentType.JSON)
                 .body("{\"name\": \"" + marker + " " + name + "\", \"priority\": \"" + priority + "\"}")
         .when()
                 .post("/api/tasks")
         .then()
-                .statusCode(201);
+                .statusCode(201)
+                .extract().jsonPath().getLong("id");
+    }
+
+    private static void markDone(long id) {
+        given()
+                .contentType(ContentType.JSON)
+                .body("{\"done\": true}")
+        .when()
+                .patch("/api/tasks/" + id)
+        .then()
+                .statusCode(200);
     }
 }

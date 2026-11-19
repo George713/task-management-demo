@@ -111,9 +111,12 @@ export class LocalTaskStore {
   }
 }
 
-// Same rules and messages as the API: trimmed, then not blank and at most 255 characters.
+// Same rules and messages as the API: a string (D47), trimmed, then not blank and at most 255 characters.
 function validName(name) {
-  const trimmed = typeof name === 'string' ? name.trim() : '';
+  if (name != null && typeof name !== 'string') {
+    throw new Error('Invalid value for name');
+  }
+  const trimmed = (name ?? '').trim();
   if (trimmed.length === 0) {
     throw new Error('Name must not be blank');
   }

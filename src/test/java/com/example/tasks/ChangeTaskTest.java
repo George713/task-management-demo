@@ -99,6 +99,18 @@ class ChangeTaskTest {
     }
 
     @Test
+    void doneThatIsNotABooleanIsRejected() {
+        rejected("{\"done\": \"true\"}", "Invalid value for done");
+        rejected("{\"done\": 1}", "done");
+    }
+
+    @Test
+    void renameToSomethingThatIsNotAStringIsRejected() {
+        rejected("{\"name\": 123}", "Invalid value for name");
+        rejected("{\"name\": false}", "name");
+    }
+
+    @Test
     void malformedJsonIsRejected() {
         rejected("{\"done\": true", "malformed");
     }

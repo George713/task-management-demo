@@ -81,6 +81,19 @@ class CreateTaskTest {
     }
 
     @Test
+    void nameThatIsNotAStringIsRejected() {
+        rejected("{\"name\": 123}", "Invalid value for name");
+        rejected("{\"name\": true}", "name");
+    }
+
+    @Test
+    void priorityThatIsNotAStringIsRejected() {
+        // Jackson would otherwise read a number as the enum's position (1 = NORMAL).
+        rejected("{\"name\": \"Water plants\", \"priority\": 1}", "Invalid priority '1'");
+        rejected("{\"name\": \"Water plants\", \"priority\": true}", "priority");
+    }
+
+    @Test
     void malformedJsonIsRejected() {
         rejected("{\"name\": \"Water plants\"", "malformed");
     }

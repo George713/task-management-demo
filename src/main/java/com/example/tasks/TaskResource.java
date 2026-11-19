@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.PATCH;
@@ -92,6 +93,13 @@ public class TaskResource {
             task.markDone(request.done());
         }
         return TaskResponse.from(task);
+    }
+
+    @DELETE
+    @Path("{id}")
+    @Transactional
+    public void delete(@PathParam("id") long id) {
+        Task.deleteById(id);
     }
 
     /** A 404 with the same {@code {"message": "..."}} body as every 400 (D22). */

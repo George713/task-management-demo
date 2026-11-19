@@ -25,11 +25,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  # Two jobs on purpose: deploy only starts after build has finished, so the uploaded
+  # artifact is always visible to it. In one job, deploy-pages sometimes asked for the
+  # artifact a second after the upload and got "No artifacts named github-pages".
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -42,5 +42,12 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v3
 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v4

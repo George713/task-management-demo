@@ -76,7 +76,7 @@ Flyway keeps every schema change as a reviewed, versioned SQL file. It records w
 
 ### D11. Backend structure: two classes, with the rules inside the entity
 **Decision:**
-- `TaskResource` handles HTTP for every `/api/tasks` endpoint. It turns JSON into request objects, checks them (`@NotBlank`, `@Size`) and runs each request in a transaction.
+- `TaskResource` handles HTTP for every `/api/tasks` endpoint. It turns JSON into request objects, checks them (`@NotBlank`, `@Size`) and runs each changing request (POST, PATCH, DELETE) in a transaction. *(Originally "each request"; the read-only `GET` needs no transaction and doesn't have one.)*
 - `Task` is the entity (one object = one row) and it enforces its own rules. New tasks are only made through `Task.create(name, priority)`, which sets `created` and `done = false`. Changes only go through `rename(...)` and `markDone(...)`. There is no way to change `priority` or `created`.
 - Database access uses Panache's built-in methods. There is no separate repository or service class.
 
@@ -106,10 +106,10 @@ Priority is stored as text (`'URGENT'`), not as a number, so reordering the list
 **Decision:** Open tasks first, then by priority (URGENT → NORMAL → LOW), then newest first. The server sorts.
 
 ### D14. Running it: `docker compose up --build` needs only Docker
-**Decision:** A multi-stage Dockerfile builds the JAR with Maven inside the container, so a reviewer needs no Java. Compose starts Postgres and the app. The README also documents the plain-Java route the brief asks for: `docker compose up db`, then `./mvnw package`, then `java -jar target/quarkus-app/quarkus-run.jar`. The Maven wrapper is included. Developers use `./mvnw quarkus:dev`, which starts Postgres via Dev Services.
+**Decision:** A multi-stage Dockerfile builds the JAR with Maven inside the container, so a reviewer needs no Java. Compose starts Postgres and the app. The README also documents the plain-Java route the brief asks for: `docker compose up db`, then `./mvnw package`, then `java -jar target/quarkus-app/quarkus-run.jar`. The Maven wrapper is included. Developers use `./mvnw quarkus:dev`, which starts Postgres via Dev Services. *(The README uses `docker compose up -d db`, so the JAR can run in the same terminal; see D44. The Docker setup itself is D32–D35.)*
 
 ### D15. Tests: API-level tests against real Postgres
-**Decision:** A handful of `@QuarkusTest` + RestAssured tests. They cover create, change and delete, and the rule violations: blank name, unknown id, and attempts to change priority or set `created`. They run against a real Postgres started automatically. No frontend tests and no mock-heavy unit tests.
+**Decision:** A handful of `@QuarkusTest` + RestAssured tests. They cover create, change and delete, and the rule violations: blank name, unknown id, and attempts to change priority or set `created`. They run against a real Postgres started automatically. No frontend tests and no mock-heavy unit tests. *(It ended up as 26 tests in four classes, one per use case: create, list, change, delete. Still all at the HTTP API.)*
 **Why:** Tests at the HTTP boundary check what the reviewer actually sees, survive internal refactoring, and use the same database as production.
 
 ### D16. UI: English, one page, classless CSS
@@ -117,7 +117,7 @@ Priority is stored as text (`'URGENT'`), not as a number, so reordering the list
 **Why:** The brief asks for a "simple" UI. Classless CSS looks decent at zero effort.
 
 ### D17. Build in vertical slices tracked as local issues
-**Decision:** After the grilling: write a spec, then split it into issues under `.scratch/task-management/` (per CLAUDE.md). Each issue is a vertical slice delivering one working feature end to end (API, test, UI): scaffold → create & list → change → delete → browser demo + Pages → README.
+**Decision:** After the grilling: write a spec, then split it into issues under `.scratch/task-management/` (per CLAUDE.md). Each issue is a vertical slice delivering one working feature end to end (API, test, UI): scaffold → create & list → change → delete → browser demo + Pages → README. *(The actual tickets: 01 scaffold + create & list as one tracer bullet, 02 change, 03 delete, 04 Docker Compose and plain Java, 05 browser demo + Pages, 06 README. Running the app got its own slice instead of hiding inside the scaffold.)*
 **Why:** Each slice is runnable and reviewable on its own, and agents get small, well-defined tasks.
 
 ### D18. Be transparent about the agentic workflow
@@ -247,10 +247,29 @@ Priority is stored as text (`'URGENT'`), not as a number, so reordering the list
 
 ---
 
+## Implementation: ticket 06, README and final docs (2026-11-19)
+
+### D43. The README starts with the demo link and the two readings of the brief
+**Decision:** The README opens with a one-paragraph summary, then the GitHub Pages link (`https://george713.github.io/task-management-demo/`) with the warning that the demo stores Tasks in the browser only. Next comes a short "How I read the brief" section (Priority fixed after creation, fields that aren't allowed are rejected), then the run routes, dev mode, tests, the tech stack, a small API table and the links to this log, the ADRs and the glossary. It also names the one-time Pages setting from D41.
+**Alternatives:** A short README that only links to the spec and this log.
+**Why:** A reviewer should know within a minute what this is and how to try it. The two readings of the brief change what the reviewer sees when they try the API, so they belong up front, not only deep in this log.
+
+### D44. The README contains only commands that were run from a fresh clone
+**Decision:** Every command in the README was run as written from a fresh `git clone` of the branch into a temporary folder: `docker compose up --build`, `docker compose down`, `docker compose down -v`, `docker compose up -d db`, `./mvnw package`, `java -jar target/quarkus-app/quarkus-run.jar`, `./mvnw quarkus:dev` and `./mvnw test`, and `mvnw.cmd` on Windows. The plain-Java route uses `docker compose up -d db` (background) instead of D14's `docker compose up db`, so everything runs in one terminal. The README notes that ports 5432 and 8080 must be free and that `./mvnw` needs Git Bash on Windows (or `mvnw.cmd`).
+**Why:** The README is what a reviewer actually runs. A command that has only been reasoned about, not run, is the most likely thing to fail on someone else's machine.
+
+### D45. Earlier decisions are corrected with a note, not rewritten
+**Decision:** Where the code ended up differing from an earlier decision, the decision keeps its original text and gets an italic note saying what changed (D11's transactions, D14's `-d`, D15's test count, D17's actual slices, and earlier D27). A decision that is no longer true at all would be superseded by a new numbered entry instead.
+**Why:** This log is the story of how the project came together (D7). Quietly rewriting old entries would hide that the plan changed, and the changes are part of the reasoning.
+
+---
+
 ## How this was built
 
-1. **Grilling session.** Every open question was worked through as a decision tree. The answers are recorded in this file, in the ADRs and in the glossary.
-2. **Spec.** The settled decisions were written into one spec.
-3. **Issue slicing.** The spec was split into vertical-slice issues under `.scratch/`.
-4. **Test-driven implementation by agents.** Each issue was implemented test-first (red → green → refactor).
-5. **Review at the end.** The finished project was reviewed against the spec and these decisions.
+1. **Grilling session.** The author worked through every open question with an agent, as a decision tree. The answers are D1–D18 in this file, the ADRs and the glossary.
+2. **Spec.** The settled decisions were written into one spec: `.scratch/task-management/spec.md`.
+3. **Vertical-slice tickets.** The spec was split into six tickets under `.scratch/task-management/issues/`, each one a working feature end to end (D17), with "blocked by" links between them.
+4. **Parallel agent implementers in worktrees.** An orchestrating agent handed each unblocked ticket to its own implementer agent. Each implementer worked in a separate git worktree on its own `ticket/NN-...` branch, so tickets that didn't depend on each other (for example 02 and 04, or 03 and 05) were built at the same time.
+5. **Test-first.** Each implementer agreed the seam first (the HTTP API, D15) and then worked red → green, one test and one small piece of code at a time. Docs-only and frontend work was checked by running it (D42, D44). Decisions made along the way were appended here (D19 onwards).
+6. **Integration branch.** Finished tickets were merged into `feature/task-management`. A ticket that started before another one landed merged the integration branch back in and re-ran the tests before handing over (visible as merge commits in the history). The orchestrator, not the implementers, closed the tickets.
+7. **Code review at the end.** Once all tickets are merged, the whole integration branch is reviewed against the repo's standards and against the spec and these decisions, before it goes to `master`. Refactoring belongs to this review, not to the red → green loop.

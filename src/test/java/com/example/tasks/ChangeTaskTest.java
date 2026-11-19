@@ -89,6 +89,11 @@ class ChangeTaskTest {
     }
 
     @Test
+    void renameToOnlyNonBreakingSpacesIsRejected() {
+        rejected("{\"name\": \"\u00a0\u00a0\"}", "blank");
+    }
+
+    @Test
     void renameOverLimitAfterTrimmingIsRejected() {
         rejected("{\"name\": \"" + "a".repeat(256) + "\"}", "255");
     }

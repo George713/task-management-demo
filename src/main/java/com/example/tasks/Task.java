@@ -48,7 +48,7 @@ public class Task extends PanacheEntityBase {
     /** Makes a new, not yet persisted Task: trimmed name, Priority defaulting to NORMAL, Created now, not Done. */
     public static Task create(String name, Priority priority) {
         Task task = new Task();
-        task.name = name.strip();
+        task.name = trimName(name);
         task.priority = priority == null ? Priority.NORMAL : priority;
         // Postgres stores microseconds; truncating here keeps the returned Task identical to the stored one.
         task.created = Instant.now().truncatedTo(ChronoUnit.MICROS);
@@ -58,7 +58,37 @@ public class Task extends PanacheEntityBase {
 
     /** Gives the Task a new name, trimmed like at creation. */
     public void rename(String name) {
-        this.name = name.strip();
+        this.name = trimName(name);
+    }
+
+    /**
+     * Removes the whitespace around a name the same way JavaScript's {@code String.trim()} does,
+     * so the server and the browser demo agree on which names are blank (D46). Unlike
+     * {@link String#strip()}, this also removes no-break spaces (U+00A0, U+2007, U+202F) and the
+     * byte order mark (U+FEFF), and keeps the ASCII separator controls (U+001C to U+001F).
+     *
+     * @return the trimmed name, or null for null
+     */
+    public static String trimName(String name) {
+        if (name == null) {
+            return null;
+        }
+        int start = 0;
+        int end = name.length();
+        while (start < end && isJavaScriptWhitespace(name.charAt(start))) {
+            start++;
+        }
+        while (end > start && isJavaScriptWhitespace(name.charAt(end - 1))) {
+            end--;
+        }
+        return name.substring(start, end);
+    }
+
+    // ECMAScript WhiteSpace and LineTerminator: TAB, LF, VT, FF, CR, the byte order mark,
+    // the line and paragraph separators, and every space separator (Unicode category Zs).
+    private static boolean isJavaScriptWhitespace(char c) {
+        return (c >= 0x09 && c <= 0x0D) || c == 0xFEFF || c == 0x2028 || c == 0x2029
+                || Character.getType(c) == Character.SPACE_SEPARATOR;
     }
 
     /** Marks the Task as Done, or un-marks it. */

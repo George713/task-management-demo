@@ -38,7 +38,7 @@ public class TaskResource {
             Priority priority) {
 
         public CreateTaskRequest {
-            name = name == null ? null : name.strip();
+            name = Task.trimName(name);
         }
     }
 
@@ -54,7 +54,7 @@ public class TaskResource {
             Boolean done) {
 
         public ChangeTaskRequest {
-            name = name == null ? null : name.strip();
+            name = Task.trimName(name);
         }
     }
 

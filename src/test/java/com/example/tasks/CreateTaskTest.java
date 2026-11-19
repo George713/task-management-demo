@@ -50,6 +50,19 @@ class CreateTaskTest {
     }
 
     @Test
+    void nameOfOnlyNonBreakingAndOtherUnicodeSpacesIsRejected() {
+        // No-break space, ideographic space, byte order mark: the demo's JavaScript trim() removes them too.
+        rejected("{\"name\": \"\u00a0\u3000\ufeff\"}", "blank");
+    }
+
+    @Test
+    void nonBreakingAndOtherUnicodeSpacesAroundTheNameAreTrimmed() {
+        post("{\"name\": \"\u00a0\u202f Buy bread\u2007\u3000\"}")
+                .statusCode(201)
+                .body("name", equalTo("Buy bread"));
+    }
+
+    @Test
     void nameOverLimitAfterTrimmingIsRejected() {
         rejected("{\"name\": \"" + "a".repeat(256) + "\"}", "255");
     }

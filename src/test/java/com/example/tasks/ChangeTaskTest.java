@@ -6,6 +6,7 @@ import io.restassured.path.json.JsonPath;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.containsStringIgnoringCase;
 import static org.hamcrest.Matchers.equalTo;
 
 @QuarkusTest
@@ -23,6 +24,14 @@ class ChangeTaskTest {
                 .body("done", equalTo(false))
                 .body("priority", equalTo("URGENT"))
                 .body("created", equalTo(task.getString("created")));
+    }
+
+    @Test
+    void changingAnUnknownTaskIsNotFound() {
+        patch(Long.MAX_VALUE, "{\"done\": true}")
+                .statusCode(404)
+                .contentType(ContentType.JSON)
+                .body("message", containsStringIgnoringCase("not found"));
     }
 
     private static JsonPath create(String name, String priority) {

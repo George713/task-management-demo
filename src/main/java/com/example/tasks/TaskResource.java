@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -81,9 +82,20 @@ public class TaskResource {
     @Transactional
     public TaskResponse change(@PathParam("id") long id, @Valid ChangeTaskRequest request) {
         Task task = Task.findById(id);
+        if (task == null) {
+            throw notFound(id);
+        }
         if (request != null && request.name() != null) {
             task.rename(request.name());
         }
         return TaskResponse.from(task);
+    }
+
+    /** A 404 with the same {@code {"message": "..."}} body as every 400 (D22). */
+    private static NotFoundException notFound(long id) {
+        return new NotFoundException(Response.status(Response.Status.NOT_FOUND)
+                .type(MediaType.APPLICATION_JSON)
+                .entity(new ErrorMappers.ErrorResponse("Task " + id + " was not found. It may have been deleted."))
+                .build());
     }
 }

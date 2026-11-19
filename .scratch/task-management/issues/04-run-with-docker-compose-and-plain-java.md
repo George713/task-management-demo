@@ -14,3 +14,40 @@
 - [ ] A `.dockerignore` keeps build output and VCS data out of the build context.
 - [ ] Both routes are verified by actually running them. Exact commands are noted in this ticket's Comments for the README (ticket 06).
 - [ ] Any new decision is appended to `DECISIONS.md`.
+
+## Comments
+
+### Verified commands (2026-11-19, Windows 11, Docker Desktop 29, Git Bash)
+
+One-command route (needs only Docker):
+
+```sh
+docker compose up --build            # add -d to run in the background
+# open http://localhost:8080
+docker compose down                  # stop; Tasks stay in the task-management_db-data volume
+docker compose down -v               # stop and delete the data
+```
+
+Verified: the app logs "Profile prod activated" and Flyway "Successfully applied 1 migration"; `POST /api/tasks` returned 201 with the new Task, `GET /api/tasks` listed it, `GET /` returned 200. After `docker compose down` and `docker compose up -d`, the Task was still listed.
+
+Plain-Java route (needs Java 17 and Docker):
+
+```sh
+docker compose up -d db
+./mvnw package                       # runs the tests too (they need Docker for Dev Services)
+java -jar target/quarkus-app/quarkus-run.jar
+# open http://localhost:8080
+```
+
+Verified: Flyway connected to `jdbc:postgresql://localhost:5432/tasks` (the Compose db) with the prod defaults, no environment variables set; creating and listing Tasks worked and showed Tasks created earlier through the Compose route.
+
+Dev mode and tests (Dev Services):
+
+```sh
+./mvnw quarkus:dev                   # starts its own Postgres container
+./mvnw test
+```
+
+Verified: both started their own Dev Services Postgres container even while the Compose db was running on port 5432 (tests confirmed on `postgres:16-alpine` after D35; dev mode was checked before that pin). Dev mode listed no Tasks (separate database). `./mvnw test`: 12 tests green before merging ticket 02, 23 tests green after. After the merge, `docker compose up --build` was re-run: POST 201, PATCH `{"done":true}` 200, list order correct.
+
+Notes for the README (ticket 06): on Windows, `./mvnw` needs Git Bash, or use `mvnw.cmd`. Port 5432 must be free for the Compose db.

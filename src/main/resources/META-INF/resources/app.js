@@ -18,13 +18,7 @@ if (typeof store.reset === 'function') {
   demoBanner.hidden = false;
   resetButton.addEventListener('click', async () => {
     showError(formError, null);
-    try {
-      await store.reset();
-    } catch (error) {
-      await refresh(error.message);
-      return;
-    }
-    await refresh();
+    await changeAndRefresh(() => store.reset());
   });
 }
 
@@ -42,6 +36,17 @@ form.addEventListener('submit', async (event) => {
   await refresh();
 });
 
+// Runs one store change, then reloads the list. If the change fails, its message is shown above the list.
+async function changeAndRefresh(change) {
+  try {
+    await change();
+  } catch (error) {
+    await refresh(error.message);
+    return;
+  }
+  await refresh();
+}
+
 // Shows the latest list. A message, if given, is shown above it (after the list is reloaded).
 async function refresh(message) {
   showError(listError, null);
@@ -58,9 +63,9 @@ async function refresh(message) {
 }
 
 function renderTask(task) {
-  const item = document.createElement('li');
+  const row = document.createElement('li');
   if (task.done) {
-    item.classList.add('done');
+    row.classList.add('done');
   }
 
   const done = document.createElement('input');
@@ -69,14 +74,8 @@ function renderTask(task) {
   done.setAttribute('aria-label', `Done: ${task.name}`);
   done.addEventListener('change', async () => {
     done.disabled = true;
-    try {
-      await store.update(task.id, { done: done.checked });
-    } catch (error) {
-      // Reload so the checkbox shows the real state again (or the Task disappears if it was deleted).
-      await refresh(error.message);
-      return;
-    }
-    await refresh();
+    // On failure the reload shows the checkbox's real state again (or drops the Task if it was deleted).
+    await changeAndRefresh(() => store.update(task.id, { done: done.checked }));
   });
 
   const name = document.createElement('span');
@@ -84,10 +83,10 @@ function renderTask(task) {
   name.textContent = task.name;
   name.title = 'Click to rename';
   name.tabIndex = 0;
-  name.addEventListener('click', () => startRename(item, name, task));
+  name.addEventListener('click', () => startRename(row, name, task));
   name.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
-      startRename(item, name, task);
+      startRename(row, name, task);
     }
   });
 
@@ -101,22 +100,16 @@ function renderTask(task) {
   remove.setAttribute('aria-label', `Delete: ${task.name}`);
   remove.addEventListener('click', async () => {
     remove.disabled = true;
-    try {
-      await store.remove(task.id);
-    } catch (error) {
-      // Typically a 404: the Task was already deleted elsewhere. The reload drops it from the list.
-      await refresh(error.message);
-      return;
-    }
-    await refresh();
+    // Typically fails with a 404: the Task was already deleted elsewhere. The reload drops it from the list.
+    await changeAndRefresh(() => store.remove(task.id));
   });
 
-  item.append(done, name, priority, remove);
-  return item;
+  row.append(done, name, priority, remove);
+  return row;
 }
 
 // Replaces the name with an input: Enter saves, Escape (or leaving the field) cancels.
-function startRename(item, name, task) {
+function startRename(row, name, task) {
   const input = document.createElement('input');
   input.className = 'name';
   input.value = task.name;
@@ -156,7 +149,7 @@ function startRename(item, name, task) {
   input.addEventListener('blur', cancel);
 
   name.replaceWith(input);
-  item.append(error);
+  row.append(error);
   input.focus();
   input.select();
 }

@@ -8,7 +8,7 @@ Vocabulary follows `GLOSSARY.md` (Task, Priority, Done, Created). Decisions refe
 
 A person needs a simple way to keep track of Tasks in the browser: write them down with a Priority, mark them Done when the work is finished (or un-mark them), fix a Task's name, and delete Tasks they no longer need. The Tasks must survive restarts, so they are persisted in Postgres.
 
-At the same time, this is an interview submission for Fairsource. The reviewer must be able to (a) try the application with as little effort as possible, (b) build and run the real thing with Maven, directly with Java or as a Docker container, and (c) understand the reasoning behind every decision. The author is new to Java and builds the project with agents, so the structure must stay small and explainable.
+At the same time, this is an interview submission for a hiring company. The reviewer must be able to (a) try the application with as little effort as possible, (b) build and run the real thing with Maven, directly with Java or as a Docker container, and (c) understand the reasoning behind every decision. The author is new to Java and builds the project with agents, so the structure must stay small and explainable.
 
 ## Solution
 
@@ -68,18 +68,18 @@ The same page can also run without any backend. In that "demo mode" Tasks are ke
 
 ### Reviewer experience
 
-37. As a Fairsource reviewer, I want to open a link and try the UI immediately without installing anything, so that I get a first impression in seconds.
-38. As a Fairsource reviewer, I want the demo to clearly say that its Tasks are stored only in my browser and not in Postgres, so that I'm not misled about what I'm looking at.
-39. As a Fairsource reviewer, I want a reset button in demo mode, so that I can start from a clean slate.
-40. As a Fairsource reviewer, I want demo-mode Tasks to survive a page reload, so that the demo behaves like the real app.
-41. As a Fairsource reviewer, I want demo mode to follow the same rules as the real app (defaults, name validation, fixed Priority, ordering), so that the demo is a faithful preview.
-42. As a Fairsource reviewer, I want to start the full application (app + Postgres) with a single Docker Compose command that doesn't require Java on my machine, so that running the real thing takes no effort.
-43. As a Fairsource reviewer, I want documented steps to build with Maven and run the JAR directly with Java against a Postgres container, so that I can verify the brief's "run directly with Java" requirement.
-44. As a Fairsource reviewer, I want the Maven wrapper included, so that I don't need a matching Maven installed.
-45. As a Fairsource reviewer, I want a README explaining how to run, build, test and open the demo, so that I don't have to guess.
-46. As a Fairsource reviewer, I want a decision log and ADRs explaining why things were built this way, so that the technical interview can focus on reasoning.
-47. As a Fairsource reviewer, I want the project generated from code.quarkus.io with Quarkus 3 (non-snapshot), Java 17, Maven and JAR packaging, so that it meets the brief's constraints.
-48. As a Fairsource reviewer, I want the tests to run with one Maven command, so that I can check the behaviour is verified.
+37. As a reviewer, I want to open a link and try the UI immediately without installing anything, so that I get a first impression in seconds.
+38. As a reviewer, I want the demo to clearly say that its Tasks are stored only in my browser and not in Postgres, so that I'm not misled about what I'm looking at.
+39. As a reviewer, I want a reset button in demo mode, so that I can start from a clean slate.
+40. As a reviewer, I want demo-mode Tasks to survive a page reload, so that the demo behaves like the real app.
+41. As a reviewer, I want demo mode to follow the same rules as the real app (defaults, name validation, fixed Priority, ordering), so that the demo is a faithful preview.
+42. As a reviewer, I want to start the full application (app + Postgres) with a single Docker Compose command that doesn't require Java on my machine, so that running the real thing takes no effort.
+43. As a reviewer, I want documented steps to build with Maven and run the JAR directly with Java against a Postgres container, so that I can verify the brief's "run directly with Java" requirement.
+44. As a reviewer, I want the Maven wrapper included, so that I don't need a matching Maven installed.
+45. As a reviewer, I want a README explaining how to run, build, test and open the demo, so that I don't have to guess.
+46. As a reviewer, I want a decision log and ADRs explaining why things were built this way, so that the technical interview can focus on reasoning.
+47. As a reviewer, I want the project generated from code.quarkus.io with Quarkus 3 (non-snapshot), Java 17, Maven and JAR packaging, so that it meets the brief's constraints.
+48. As a reviewer, I want the tests to run with one Maven command, so that I can check the behaviour is verified.
 
 ### Developer experience
 

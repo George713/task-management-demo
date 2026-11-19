@@ -1,6 +1,6 @@
 # Decision Log
 
-A running record of every decision made while building this project for the Fairsource interview task (`Fairsource_Interview-Task.pdf`): big and small, including the reasoning and the alternatives that were rejected. Read top to bottom, it tells the story of how the project came together.
+A running record of every decision made while building this project for an interview task (the task PDF, which is not part of this repo): big and small, including the reasoning and the alternatives that were rejected. Read top to bottom, it tells the story of how the project came together.
 
 The bigger, hard-to-reverse decisions also have their own ADR in [`docs/adr/`](docs/adr/). Domain vocabulary lives in [`GLOSSARY.md`](GLOSSARY.md).
 

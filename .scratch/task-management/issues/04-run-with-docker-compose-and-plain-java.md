@@ -48,6 +48,6 @@ Dev mode and tests (Dev Services):
 ./mvnw test
 ```
 
-Verified: both started a Dev Services `postgres:16-alpine` container even while the Compose db was running on port 5432. Dev mode listed no Tasks (separate database). `./mvnw test`: 12 tests green before merging ticket 02, 23 tests green after. After the merge, `docker compose up --build` was re-run: POST 201, PATCH `{"done":true}` 200, list order correct.
+Verified: both started their own Dev Services Postgres container even while the Compose db was running on port 5432 (tests confirmed on `postgres:16-alpine` after D35; dev mode was checked before that pin). Dev mode listed no Tasks (separate database). `./mvnw test`: 12 tests green before merging ticket 02, 23 tests green after. After the merge, `docker compose up --build` was re-run: POST 201, PATCH `{"done":true}` 200, list order correct.
 
 Notes for the README (ticket 06): on Windows, `./mvnw` needs Git Bash, or use `mvnw.cmd`. Port 5432 must be free for the Compose db.
